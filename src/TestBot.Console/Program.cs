@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using TestBot.Console;
 using TestBot.Console.Contexts;
+using TestBot.Console.Repositories;
 using TestBot.Console.Services;
 
 IHost host = Host.CreateDefaultBuilder(args)
@@ -33,6 +34,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddScoped<UpdateHandler>();
         services.AddScoped<ReceiverService>();
         services.AddHostedService<PollingService>();
+        services.AddScoped<ITestRepository, TestRepository>();
     })
     .Build();
 
