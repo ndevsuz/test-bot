@@ -12,7 +12,8 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
 {
     private static readonly InputPollOption[] PollOptions = ["Hello", "World!"];
 
-    private readonly List<long> Admins = configuration.GetSection("AdminIds");
+    private readonly List<long>? AdminIds = configuration.GetSection("AdminIds").Get<List<long>>();
+
 
     public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
     {
@@ -83,8 +84,10 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
     }
 
     async Task<Message> HandleAdmin(Message msg)
-     {
-        return await bot.SendTextMessageAsync(msg.Chat, "wtf");
+    {
+        if(AdminIds != null && AdminIds.Contains(msg.Chat.Id))
+            return await bot.SendTextMessageAsync(msg.Chat, "wtf");
+        return await bot.SendTextMessageAsync(msg.Chat, "not wtf");
     }
     async Task<Message> SendPhoto(Message msg)
     {
