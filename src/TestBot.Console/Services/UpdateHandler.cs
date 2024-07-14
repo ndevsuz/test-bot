@@ -5,15 +5,17 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
+using TestBot.Console.Repositories;
+using YourEasyBot;
 
 namespace TestBot.Console.Services;
 
-public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger, IConfiguration configuration) : IUpdateHandler
+public class UpdateHandler(ITelegramBotClient bot, ITestRepository _testRepository, ILogger<UpdateHandler> logger, ILogger<AdminService> alogger, IConfiguration configuration) : IUpdateHandler
 {
     private static readonly InputPollOption[] PollOptions = ["Hello", "World!"];
 
+    private AdminService _adminService = new AdminService(bot, _testRepository, alogger);
     private readonly List<long>? AdminIds = configuration.GetSection("AdminIds").Get<List<long>>();
-
 
     public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
     {
@@ -83,12 +85,35 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
         return await bot.SendTextMessageAsync(msg.Chat, usage, parseMode: ParseMode.Html, replyMarkup: new ReplyKeyboardRemove());
     }
 
-    async Task<Message> HandleAdmin(Message msg)
+    async Task<Message> HandleAdmin(Message msg)        
     {
-        if(AdminIds != null && AdminIds.Contains(msg.Chat.Id))
-            return await bot.SendTextMessageAsync(msg.Chat, "wtf");
-        return await bot.SendTextMessageAsync(msg.Chat, "not wtf");
+        if (AdminIds != null && AdminIds.Contains(msg.Chat.Id))
+        {
+            var buttons = new KeyboardButton[][]
+            {
+                new KeyboardButton[] { "Yangi test" },
+                new KeyboardButton[] { "Testlarni ko'rish" }
+            };
+            
+            var sent = await bot.SendTextMessageAsync(msg.Chat.Id, "Tanlang :",
+                replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true });
+
+            switch (msg.Text)
+            {
+                case "Yangi test":
+                    await _adminService.HandleYangiTest(msg);
+                    break;
+                case "Testlarni ko'rish":
+                    await bot.SendTextMessageAsync(msg.Chat, "Showing existing tests...");
+                    break;
+                default:
+                    return await bot.SendTextMessageAsync(msg.Chat, "Unknown command. Please use the buttons provided.", replyMarkup: new ReplyKeyboardRemove());
+            }
+        }
+        
+        return await bot.SendTextMessageAsync(msg.Chat, "You are not authorized to use admin commands.");
     }
+
     async Task<Message> SendPhoto(Message msg)
     {
         await bot.SendChatActionAsync(msg.Chat, ChatAction.UploadPhoto);
@@ -111,15 +136,15 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
         return await bot.SendTextMessageAsync(msg.Chat, "Inline buttons:", replyMarkup: new InlineKeyboardMarkup(buttons));
     }
 
-    async Task<Message> SendReplyKeyboard(Message msg)
-    {
-        List<List<KeyboardButton>> keys =
-        [
-            ["1.1", "1.2", "1.3"],
-            ["2.1", "2.2"],
-        ];
-        return await bot.SendTextMessageAsync(msg.Chat, "Keyboard buttons:", replyMarkup: new ReplyKeyboardMarkup(keys) { ResizeKeyboard = true });
-    }
+        async Task<Message> SendReplyKeyboard(Message msg)
+        {
+            List<List<KeyboardButton>> keys =
+            [
+                ["1.1", "1.2", "1.3"],
+                ["2.1", "2.2"],
+            ];
+            return await bot.SendTextMessageAsync(msg.Chat, "Keyboard buttons:", replyMarkup: new ReplyKeyboardMarkup(keys) { ResizeKeyboard = true });
+        }
 
     async Task<Message> RemoveKeyboard(Message msg)
     {
