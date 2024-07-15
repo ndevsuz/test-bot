@@ -2,7 +2,9 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
+using TestBot.Repositories;
 using TestBot.Services;
+using TestBot.VeiwModels;
 
 namespace TestBot
 {
@@ -45,9 +47,25 @@ namespace TestBot
 				switch (adminResponse)
 				{
 					case "Yangi test":
-						var result = await _adminService.HandleNewTest();
-						await Telegram.SendTextMessageAsync(chat.Id, result.ToString());
+						var dto = new TestCreationModel();
+						
+						await Telegram.SendTextMessageAsync(chat.Id, "Ismingiz va familiyangizni kiriting",
+							replyMarkup: new ReplyKeyboardRemove());
+						dto.CreatorUser = await NewTextMessage(update);
+
+						await Telegram.SendTextMessageAsync(chat.Id, "Testlar sonini kiriting");
+						dto.Amount = int.Parse(await NewTextMessage(update));
+						
+						await Telegram.SendTextMessageAsync(chat.Id, "Javoblarni kiriting (abcdab yoki 1a2b3c4d5a6b) korinishida");
+						dto.Answers = await NewTextMessage(update);
+						
+						await Telegram.SendTextMessageAsync(chat.Id, "Test qachon tugashini kiriting (yil/oy/kun soat:minut)");
+						dto.ExpirationDate = DateTime.Parse(await NewTextMessage(update));
+						
+						var result = await _adminService.HandleNewTest(dto);
+						await Telegram.SendTextMessageAsync(chat.Id, $"Testning ID raqami : {result.ToString()}");
 						break;
+					
 					case "Testlarni ko'rish":
 						await Telegram.SendTextMessageAsync(chat.Id, "Showing existing tests...");
 						break;
