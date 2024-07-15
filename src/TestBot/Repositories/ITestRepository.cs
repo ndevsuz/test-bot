@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using TestBot.Console.Models;
+using TestBot.Models;
 
-namespace TestBot.Console.Repositories;
+namespace TestBot.Repositories;
 
 public interface ITestRepository
 {

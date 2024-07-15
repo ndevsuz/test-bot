@@ -1,4 +1,4 @@
-namespace TestBot.Console.Models;
+namespace TestBot.Models;
 
 public class Test
 {

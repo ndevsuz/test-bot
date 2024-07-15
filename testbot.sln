@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestBot.Console", "src\TestBot.Console\TestBot.Console.csproj", "{D0F5112A-2181-4CFF-804A-26B85DFDFB44}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestBot", "src\TestBot\TestBot.csproj", "{D0F5112A-2181-4CFF-804A-26B85DFDFB44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

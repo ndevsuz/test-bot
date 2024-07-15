@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using TestBot.Console.Contexts;
+using TestBot.Contexts;
 
 #nullable disable
 
-namespace TestBot.Console.Migrations
+namespace TestBot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -22,7 +22,7 @@ namespace TestBot.Console.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("TestBot.Console.Models.Test", b =>
+            modelBuilder.Entity("TestBot.Models.Test", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()

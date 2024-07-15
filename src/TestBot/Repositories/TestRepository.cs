@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using TestBot.Console.Contexts;
-using TestBot.Console.Models;
+using TestBot.Contexts;
+using TestBot.Models;
 
-namespace TestBot.Console.Repositories;
+namespace TestBot.Repositories;
 
 public class TestRepository : ITestRepository
 {

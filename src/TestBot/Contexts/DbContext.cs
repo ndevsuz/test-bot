@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TestBot.Console.Models;
+using TestBot.Models;
 
-namespace TestBot.Console.Contexts;
+namespace TestBot.Contexts;
 
 public class AppDbContext : DbContext
 {
