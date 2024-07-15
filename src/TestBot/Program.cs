@@ -67,7 +67,13 @@ namespace TestBot
 						break;
 					
 					case "Testlarni ko'rish":
-						await Telegram.SendTextMessageAsync(chat.Id, "Showing existing tests...");
+						await Telegram.SendTextMessageAsync(chat.Id, "Testlar");
+						var tests = await _adminService.GetAllTests();
+						foreach (var test in tests)
+						{
+							await Telegram.SendTextMessageAsync(chat.Id, test,
+								replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true });
+						}
 						break;
 					default:
 						await Telegram.SendTextMessageAsync(chat.Id, "Unknown command. Please use the buttons provided.", replyMarkup: new ReplyKeyboardRemove());

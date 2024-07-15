@@ -48,6 +48,12 @@ public class AdminService
         
         return newTest.Id;
     }
+
+    public async Task<List<string>> GetAllTests()
+    {
+        var result = _testRepository.SelectAll().ToList();
+        return ConvertTestsToStrings(result);
+    }
     
     public static Dictionary<int, char> CreateDictionaryFromInput(string input)
     {
@@ -76,5 +82,25 @@ public class AdminService
         }
 
         return dictionary;
+    }
+    
+    public static List<string> ConvertTestsToStrings(List<Test> tests)
+    {
+        List<string> formattedStrings = new();
+
+        foreach (var test in tests)
+        {
+            string formattedString = $@"
+ID : {test.Id}
+Tuzuvchi : {test.CreatorUser}
+Testlar soni: {test.Amount}
+Javoblar : {test.Answers}
+Yaratilgan vaqti: {test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
+Yakunlanadigan vaqti : {test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
+";
+            formattedStrings.Add(formattedString);
+        }
+
+        return formattedStrings;
     }
 }
