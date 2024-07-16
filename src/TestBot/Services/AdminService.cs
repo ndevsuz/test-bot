@@ -1,7 +1,3 @@
-using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
-using TestBot.EasyBotFramework;
 using TestBot.Models;
 using TestBot.Repositories;
 using TestBot.VeiwModels;
