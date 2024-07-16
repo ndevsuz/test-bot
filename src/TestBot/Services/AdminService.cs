@@ -54,6 +54,14 @@ public class AdminService
         var result = _testRepository.SelectAll().ToList();
         return ConvertTestsToStrings(result);
     }
+
+    public async Task<bool> DeleteTest(long id)
+    {
+        var result = await _testRepository.DeleteAsync(x => x.Id == id);
+        await _testRepository.SaveAsync();
+
+        return result;
+    }
     
     public static Dictionary<int, char> CreateDictionaryFromInput(string input)
     {

@@ -36,7 +36,8 @@ namespace TestBot
 				var buttons = new KeyboardButton[][]
 				{
 					new KeyboardButton[] { "Yangi test" },
-					new KeyboardButton[] { "Testlarni ko'rish(buni qoshmimiz yuz dollru)" },
+					new KeyboardButton[] { "Testlarni ko'rish" },
+					new KeyboardButton[] { "Testni o'chirish" },
 					new KeyboardButton[] {"Orqaga🔙"}
 				};
 				await Telegram.SendTextMessageAsync(chat.Id, "Hush kelibsiz admin! :",
@@ -75,6 +76,19 @@ namespace TestBot
 								replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true });
 						}
 						break;
+					
+					case "Testni o'chirish":
+						await Telegram.SendTextMessageAsync(chat.Id, "O'chirish uchun test ID sini kiriting");
+						var testId = long.Parse(await NewTextMessage(update));
+						var isDeleted = await _adminService.DeleteTest(testId);
+						if(isDeleted)
+							await Telegram.SendTextMessageAsync(chat.Id, "Test o'chirildi",
+								replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true });
+						else
+							await Telegram.SendTextMessageAsync(chat.Id, "Bunday ID bilan test mavjud emas",
+								replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true });
+						break;
+					
 					default:
 						await Telegram.SendTextMessageAsync(chat.Id, "Unknown command. Please use the buttons provided.", replyMarkup: new ReplyKeyboardRemove());
 						break;
