@@ -30,7 +30,7 @@ namespace TestBot.EasyBotFramework
 			_adminService = adminService;
 		}
 
-		protected void Run() => RunAsync().Wait();
+		public void Run() => RunAsync().Wait();
 
 		private async Task RunAsync()
 		{
