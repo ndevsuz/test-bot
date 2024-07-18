@@ -14,6 +14,7 @@ public class TestRepository : ITestRepository
     public TestRepository(AppDbContext dbContext)
     {
         this.dbContext = dbContext;
+        table = dbContext.Set<Test>();
     }
 
     public async Task<Test> AddAsync(Test entity)

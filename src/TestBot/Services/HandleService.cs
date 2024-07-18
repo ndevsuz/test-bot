@@ -52,10 +52,18 @@ public class HandleService : EasyBot
 
 				    await Telegram.SendTextMessageAsync(chat.Id,
 					    "Test qachon tugashini kiriting (yil/oy/kun soat:minut)");
-				    dto.ExpirationDate = DateTime.Parse(await NewTextMessage(update));
+				    dto.ExpirationDate = DateTime.Parse(await NewTextMessage(update)).ToUniversalTime();
+				    long result = 0;
 
-				    var result = await _adminService.HandleNewTest(dto);
-				    await Telegram.SendTextMessageAsync(chat.Id, $"Testning ID raqami : {result.ToString()}");
+				    try
+				    {
+					    result = await _adminService.HandleNewTest(dto);
+						await Telegram.SendTextMessageAsync(chat.Id, $"Testning ID raqami : {result.ToString()}");
+				    }
+				    catch(Exception ex)
+				    {
+					    await Telegram.SendTextMessageAsync(chat.Id, $"{ex.Message + ex.InnerException}");
+				    }
 				    break;
 
 			    case "Testlarni ko'rish":

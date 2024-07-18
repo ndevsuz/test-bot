@@ -16,7 +16,7 @@ public class AdminService
     {
         dto.Answers = dto.Answers.ToLower().Trim();
         
-        if (dto.ExpirationDate < DateTime.UtcNow.AddHours(5))
+        if (dto.ExpirationDate > DateTime.UtcNow.AddHours(5))
             throw new Exception("Test yankunlanadigan vaqt hozirgi vaqtdan avval bo'la olmaydi");
         
         if (dto.Answers.Any(char.IsDigit))
