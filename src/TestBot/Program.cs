@@ -12,7 +12,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 	.ConfigureServices((context, services) =>
 	{
 		services.Configure<BotConfiguration>(context.Configuration.GetSection("BotConfiguration"));
-		
+
 		services.AddHttpClient("telegram_bot_client").RemoveAllLoggers()
 			.AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
 			{
@@ -21,10 +21,9 @@ IHost host = Host.CreateDefaultBuilder(args)
 				TelegramBotClientOptions options = new(botConfiguration.BotToken);
 				return new TelegramBotClient(options, httpClient);
 			});
-		services.AddSingleton<IConfiguration>(context.Configuration);
+		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();
 		services.AddScoped<AdminService>();
-		services.AddScoped<EasyBot>();
 		services.AddScoped<HandleService>();
 		services.AddDbContext<AppDbContext>(options =>
 			options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));	
@@ -38,5 +37,5 @@ using (var scope = host.Services.CreateScope())
 	var handleService = services.GetRequiredService<HandleService>();
 	await handleService.HandleRequest();
 }
-
+	
 await host.RunAsync();
