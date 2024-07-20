@@ -4,6 +4,7 @@ using Telegram.Bot;
 using TestBot;
 using TestBot.Contexts;
 using TestBot.EasyBotFramework;
+using TestBot.Handlers;
 using TestBot.Repositories;
 using TestBot.Services;
 
@@ -25,6 +26,10 @@ IHost host = Host.CreateDefaultBuilder(args)
 		services.AddScoped<ITestRepository, TestRepository>();
 		services.AddScoped<AdminService>();
 		services.AddScoped<HandleService>();
+		services.AddSingleton(new CancellationTokenSource());
+		services.AddScoped<HandleNextMessage>();
+		services.AddScoped<HandleAdmin>();
+		services.AddScoped<HandleUser>();
 		services.AddDbContext<AppDbContext>(options =>
 			options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));	
 

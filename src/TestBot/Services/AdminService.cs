@@ -4,30 +4,24 @@ using TestBot.VeiwModels;
 
 namespace TestBot.Services;
 
-public class AdminService
+public class AdminService(ITestRepository testRepository)
 {
-    private readonly ITestRepository _testRepository;
-    public AdminService(ITestRepository testRepository)
-    {
-        _testRepository = testRepository;
-    }
-
-    public async Task<long> HandleNewTest(TestCreationModel dto)
+    public async Task<string> HandleNewTest(TestCreationModel dto)
     {
         dto.Answers = dto.Answers.ToLower().Trim();
         
-        if (dto.ExpirationDate > DateTime.UtcNow.AddHours(5))
-            throw new Exception("Test yankunlanadigan vaqt hozirgi vaqtdan avval bo'la olmaydi");
+        if (dto.ExpirationDate < DateTime.UtcNow.AddHours(5))
+            return ("Test yankunlanadigan vaqt hozirgi vaqtdan avval bo'la olmaydi");
         
         if (dto.Answers.Any(char.IsDigit))
         {
             if (CreateDictionaryFromInput(dto.Answers).Count != dto.Amount)
-                throw new Exception("Javoblar soni testlar soni bilan teng bolishi kerak");
+                return ("Javoblar soni testlar soni bilan teng bolishi kerak");
         }
         else
         {
             if(dto.Answers.Length != dto.Amount)
-                throw new Exception("Javoblar soni testlar soni bilan teng bolishi kerak");
+                return ("Javoblar soni testlar soni bilan teng bolishi kerak");
         }
 
         var newTest = new Test()
@@ -39,34 +33,34 @@ public class AdminService
             ExpirationDate = dto.ExpirationDate
         };
 
-        await _testRepository.AddAsync(newTest);
-        await _testRepository.SaveAsync();
-        
-        return newTest.Id;
+        await testRepository.AddAsync(newTest);
+        await testRepository.SaveAsync();
+
+        return $"Testning ID raqami : {newTest.Id}";
     }
 
-    public async Task<List<string>> GetAllTests()
+    public Task<List<string>> GetAllTests()
     {
-        var result = _testRepository.SelectAll().ToList();
-        return ConvertTestsToStrings(result);
+        var result = testRepository.SelectAll().ToList();
+        return Task.FromResult(ConvertTestsToStrings(result));
     }
 
     public async Task<bool> DeleteTest(long id)
     {
-        var result = await _testRepository.DeleteAsync(x => x.Id == id);
-        await _testRepository.SaveAsync();
+        var result = await testRepository.DeleteAsync(x => x.Id == id);
+        await testRepository.SaveAsync();
 
         return result;
     }
-    
-    public static Dictionary<int, char> CreateDictionaryFromInput(string input)
+
+    private static Dictionary<int, char> CreateDictionaryFromInput(string input)
     {
         var dictionary = new Dictionary<int, char>();
-        int i = 0;
+        var i = 0;
 
         while (i < input.Length)
         {
-            int j = i;
+            var j = i;
             while (j < input.Length && char.IsDigit(input[j]))
             {
                 j++;
@@ -74,8 +68,8 @@ public class AdminService
             
             if (j < input.Length && j > i && char.IsLetter(input[j]))
             {
-                int key = int.Parse(input.Substring(i, j - i));
-                char value = input[j];
+                var key = int.Parse(input.Substring(i, j - i));
+                var value = input[j];
                 dictionary[key] = value;
                 i = j + 1;
             }
@@ -87,24 +81,16 @@ public class AdminService
 
         return dictionary;
     }
-    
-    public static List<string> ConvertTestsToStrings(List<Test> tests)
+
+    private static List<string> ConvertTestsToStrings(List<Test> tests)
     {
-        List<string> formattedStrings = new();
-
-        foreach (var test in tests)
-        {
-            string formattedString = $@"
-ID : {test.Id}
-Tuzuvchi : {test.CreatorUser}
-Testlar soni: {test.Amount}
-Javoblar : {test.Answers}
-Yaratilgan vaqti: {test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
-Yakunlanadigan vaqti : {test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
-";
-            formattedStrings.Add(formattedString);
-        }
-
-        return formattedStrings;
+        return tests.Select(test => $@"
+            ID : {test.Id}
+            Tuzuvchi : {test.CreatorUser}
+            Testlar soni: {test.Amount}
+            Javoblar : {test.Answers}
+            Yaratilgan vaqti: {test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
+            Yakunlanadigan vaqti : {test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
+            ").ToList();
     }
 }
