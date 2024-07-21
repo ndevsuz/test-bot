@@ -6,7 +6,7 @@ using TestBot.EasyBotFramework;
 
 namespace TestBot.Handlers;
 
-public class HandleNextMessage(IOptions<BotConfiguration> botConfiguration, CancellationTokenSource cancel)
+public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, CancellationTokenSource cancel)
 {
     private readonly ITelegramBotClient _telegram = new TelegramBotClient(botConfiguration.Value.BotToken);
     public async Task<string?> NewTextMessage(UpdateInfo update, CancellationToken ct = default)
@@ -44,4 +44,21 @@ public class HandleNextMessage(IOptions<BotConfiguration> botConfiguration, Canc
         update.Update = newUpdate.Update;
         return update.UpdateKind = newUpdate.UpdateKind;
     }
+    
+    public async Task<string> ButtonClicked(UpdateInfo update, Message msg = null, CancellationToken ct = default)
+    {
+        while (true)
+        {
+            switch (await NextEvent(update, ct))
+            {
+                case UpdateKind.CallbackQuery:
+                    if (msg != null && update.Message.MessageId != msg.MessageId)
+                        _ = _telegram.AnswerCallbackQueryAsync(update.Update.CallbackQuery.Id, null, cancellationToken: ct);
+                    else
+                        return update.CallbackData;
+                    continue;
+            }
+        }
+    }
+
 }

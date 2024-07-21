@@ -24,10 +24,11 @@ IHost host = Host.CreateDefaultBuilder(args)
 			});
 		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();
+		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<AdminService>();
 		services.AddScoped<HandleService>();
 		services.AddSingleton(new CancellationTokenSource());
-		services.AddScoped<HandleNextMessage>();
+		services.AddScoped<HandleNextUpdate>();
 		services.AddScoped<HandleAdmin>();
 		services.AddScoped<HandleUser>();
 		services.AddDbContext<AppDbContext>(options =>

@@ -39,11 +39,27 @@ public class AdminService(ITestRepository testRepository)
         return $"Testning ID raqami : {newTest.Id}";
     }
 
+    public async Task<string?> GetById(long id)
+    {
+        var result = await testRepository.SelectAsync(t => t.Id == id);
+        if (result == null)
+            return null;
+        return await Task.FromResult(ConvertTestsToStrings(result));
+    }
+    
+    public async Task<Test?> GetTestById(long id)
+    {
+        var result = await testRepository.SelectAsync(t => t.Id == id);
+        return result ?? null;
+    }
+
+    /*
     public Task<List<string>> GetAllTests()
     {
         var result = testRepository.SelectAll().ToList();
         return Task.FromResult(ConvertTestsToStrings(result));
     }
+    */
 
     public async Task<bool> DeleteTest(long id)
     {
@@ -82,15 +98,15 @@ public class AdminService(ITestRepository testRepository)
         return dictionary;
     }
 
-    private static List<string> ConvertTestsToStrings(List<Test> tests)
+    private static string ConvertTestsToStrings(Test test)
     {
-        return tests.Select(test => $@"
+        return $@"
             ID : {test.Id}
             Tuzuvchi : {test.CreatorUser}
             Testlar soni: {test.Amount}
             Javoblar : {test.Answers}
             Yaratilgan vaqti: {test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
             Yakunlanadigan vaqti : {test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
-            ").ToList();
+            ";
     }
 }

@@ -1,7 +1,11 @@
 using Microsoft.Extensions.Options;
+using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
 using TestBot.Handlers;
+using TestBot.Helpers;
 
 namespace TestBot.Services;
 
@@ -18,13 +22,27 @@ public class HandleService(
 	    if (update.UpdateKind != UpdateKind.NewMessage || update.MsgCategory != MsgCategory.Text)
 		    return;
 	    
-	    if (update.Message.Text == "/admin" && update.UserType == UserType.Admin)
+	    switch (update.Message.Text)
 	    {
-		    await handleAdmin.Handle(chat, user, update);
-	    }
-	    else if (update.Message.Text == "/start")
-	    {
-		    await handleUser.Handle(chat, user, update);
+		    case "/admin" when update.UserType == UserType.Admin:
+			    await handleAdmin.Handle(chat, user, update);
+			    break;
+		    case "/start":
+		    {
+			    var result = await CheckMember.CheckMemberAsync(Telegram ,chat, configuration);
+			    if (result)
+				    await handleUser.Handle(chat, user, update);
+			    else
+			    {
+				    var checkMsg = await Telegram.SendTextMessageAsync(chat.Id,
+					    "Assalamu alaykum! Botdan foydalanish uchun, pasdagi tugmani bosib kanalga obuna bo'ling, va qaytadan /start ni bosing.", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[]
+					    {
+						    new("Obuna bo'lish") { Url = "https://t.me/+t6rTFC-i3OpjOThi"}
+					    }));
+				    
+			    }
+			    break;	
+		    }
 	    }
     }
     public Task HandleRequest()
