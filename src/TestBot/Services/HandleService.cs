@@ -40,7 +40,7 @@ public class HandleService(
 				    var checkMsg = await Telegram.SendTextMessageAsync(chat.Id,
 					    "Assalamu alaykum! Botdan foydalanish uchun, pasdagi tugmani bosib kanalga obuna bo'ling, va qaytadan /start ni bosing.", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[]
 					    {
-						    new("Obuna bo'lish") { Url = "https://t.me/+t6rTFC-i3OpjOThi"}
+						    new("Obuna bo'lish") { Url = "https://t.me/kelajakkabirqadam_1"}
 					    }));
 				    
 			    }
