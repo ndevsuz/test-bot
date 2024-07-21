@@ -6,12 +6,14 @@ using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
 using TestBot.Handlers;
 using TestBot.Helpers;
+using TestBot.Repositories;
 
 namespace TestBot.Services;
 
 public class HandleService(
 	HandleAdmin handleAdmin,
 	HandleUser handleUser,
+	UserService userService,
 	IConfiguration configuration,
 	IOptions<BotConfiguration> botConfiguration)
 	: EasyBot(botConfiguration.Value.BotToken, configuration)
@@ -29,6 +31,7 @@ public class HandleService(
 			    break;
 		    case "/start":
 		    {
+			    _ = Task.Run(async () => await userService.AddUser(chat));
 			    var result = await CheckMember.CheckMemberAsync(Telegram ,chat, configuration);
 			    if (result)
 				    await handleUser.Handle(chat, user, update);

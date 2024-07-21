@@ -8,7 +8,7 @@ namespace TestBot.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly DbSet<User> table;
+    private readonly DbSet<User?> table;
     private readonly AppDbContext dbContext;
 
     public UserRepository(AppDbContext dbContext)
@@ -18,11 +18,10 @@ public class UserRepository : IUserRepository
     }
 
 
-    public async Task<User> AddAsync(User entity)
+    public async Task AddAsync(User? entity)
     {
-        await table.AddAsync(entity);
-
-        return entity;
+        await dbContext.Users.AddAsync(entity);
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task<User> UpdateAsync(User entity)
@@ -32,7 +31,7 @@ public class UserRepository : IUserRepository
         return entry.Entity;
     }
 
-    public async Task<bool> DeleteAsync(Expression<Func<User, bool>> expression)
+    public async Task<bool> DeleteAsync(Expression<Func<User?, bool>> expression)
     {
         var entity = await this.SelectAsync(expression);
 
@@ -45,11 +44,11 @@ public class UserRepository : IUserRepository
         return false;
     }
 
-    public async Task<User> SelectAsync(Expression<Func<User, bool>> expression, string[] includes = null)
+    public async Task<User?> SelectAsync(Expression<Func<User?, bool>> expression, string[] includes = null)
         => await this.SelectAll(expression, includes).FirstOrDefaultAsync();
 
 
-    public IQueryable<User> SelectAll(Expression<Func<User, bool>> expression = null, string[] includes = null, bool isTracking = true)
+    public IQueryable<User?> SelectAll(Expression<Func<User?, bool>> expression = null, string[] includes = null, bool isTracking = true)
     {
         var query = expression is null ? isTracking ? table : table.AsNoTracking()
             : isTracking ? table.Where(expression) : table.Where(expression).AsNoTracking();

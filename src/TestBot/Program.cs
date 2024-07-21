@@ -27,6 +27,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<AdminService>();
 		services.AddScoped<HandleService>();
+		services.AddScoped<UserService>();
 		services.AddSingleton(new CancellationTokenSource());
 		services.AddScoped<HandleNextUpdate>();
 		services.AddScoped<HandleAdmin>();

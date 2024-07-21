@@ -3,7 +3,9 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
+using TestBot.Models;
 using TestBot.Services;
+using User = Telegram.Bot.Types.User;
 
 namespace TestBot.Handlers;
 
@@ -18,7 +20,6 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
             var buttons = new KeyboardButton[][]
             {
                 new KeyboardButton[] { "\u2705Javobni tekshirish" },
-                new KeyboardButton[] { "\ud83d\udc64 Mening ma'lumotlarim" },
             };
             
             await _telegram.SendTextMessageAsync(chat.Id, "Bosh menu:", replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true } );
@@ -30,6 +31,8 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
                 case "\u2705Javobni tekshirish":
                     await HandleExam(chat, update);
                     break;
+                case "/admin":
+                    return;
             }
 
             return;
@@ -38,10 +41,12 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
 
     private async Task HandleExam(Chat chat, UpdateInfo update)
     {
-        await _telegram.SendTextMessageAsync(chat.Id, "Example: {testid}*1a2b3c or 1a3c or abc...", replyMarkup: new ReplyKeyboardRemove());
+        await _telegram.SendTextMessageAsync(chat.Id, "Ism familiyangizni kirting: ", replyMarkup: new ReplyKeyboardRemove());
+        var userName = await handle.NewTextMessage(update);
+
+        await _telegram.SendTextMessageAsync(chat.Id, "Javoblarni kiriting:\n Misol: {testid}*1a2b3c yoki {testid}*abc", replyMarkup: new ReplyKeyboardRemove());
         var testMessage = await handle.NewTextMessage(update);
 
-        // Check if the message contains '*' indicating test ID and answers
         string userAnswers;
         long testId = 0;
         if (testMessage.Contains('*'))
@@ -49,7 +54,7 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
             var parts = testMessage.Split('*');
             if (parts.Length != 2 || !long.TryParse(parts[0], out testId))
             {
-                await _telegram.SendTextMessageAsync(chat.Id, "Invalid format. Please provide the test ID and answers in the correct format.");
+                await _telegram.SendTextMessageAsync(chat.Id, "Iltimos, misoldagidek kiriting:\nMisol: {testid}*1a2b3c yoki {testid}*abc");
                 return;
             }
             userAnswers = parts[1];
@@ -59,29 +64,26 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
             userAnswers = testMessage;
         }
 
-        // Retrieve the test
         var test = await adminService.GetTestById(testId);
         if (test == null)
         {
-            await _telegram.SendTextMessageAsync(chat.Id, "Test not found.");
+            await _telegram.SendTextMessageAsync(chat.Id, "Bunday test topilmadi..");
             return;
         }
 
-        // Check if the test has expired
         if (DateTime.UtcNow > test.ExpirationDate)
         {
-            await _telegram.SendTextMessageAsync(chat.Id, "This test has expired.");
+            await _telegram.SendTextMessageAsync(chat.Id, "Bu testni vaqti tugagan..");
             return;
         }
 
-        // Calculate the percentage of correct answers
         var correctAnswers = test.Answers;
-        var percentage = CalculateCorrectAnswerPercentage(userAnswers, correctAnswers);
+        var (percentage, correctCount, incorrectCount) = CalculateCorrectAnswerPercentage(userAnswers, correctAnswers);
 
-        await _telegram.SendTextMessageAsync(chat.Id, $"Your score: {percentage}%");
+        await _telegram.SendTextMessageAsync(chat.Id, $"\ud83d\udc64Foydalanuvchi: {userName}\n\n \u270d\ud83c\udfffMuallif: {test.CreatorUser}\n \ud83d\udcd6Jami savollar: {test.Amount}\n \u2705Tog'ri javoblar: {correctCount}\n \ud83d\udd0dFoyiz: {percentage}");
     }
 
-    private double CalculateCorrectAnswerPercentage(string userAnswers, string correctAnswers)
+    private (double percentage, int correctCount, int incorrectCount) CalculateCorrectAnswerPercentage(string userAnswers, string correctAnswers)
     {
         var correctAnswerDict = ParseAnswers(correctAnswers);
         var userAnswerDict = ParseAnswers(userAnswers);
@@ -95,7 +97,10 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
             }
         }
 
-        return (double)correctCount / correctAnswerDict.Count * 100;
+        int incorrectCount = correctAnswerDict.Count - correctCount;
+        double percentage = (double)correctCount / correctAnswerDict.Count * 100;
+
+        return (percentage, correctCount, incorrectCount);
     }
 
     private Dictionary<int, char> ParseAnswers(string answers)
@@ -126,5 +131,4 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
 
         return answerDict;
     }
-    
 } 

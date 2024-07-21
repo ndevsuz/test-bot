@@ -47,10 +47,11 @@ namespace TestBot.Handlers
                             await HandleDeleteTest(chat, update);
                             break;
                         default:
-                            await _telegram.SendTextMessageAsync(chat.Id, "Unknown command. Please use the buttons provided.",
+                            await _telegram.SendTextMessageAsync(chat.Id, "Foydalanuvchi rejimiga otish uchun yana bir marotaba bosing.",
                                 replyMarkup: new ReplyKeyboardRemove());
                             break;
                     }
+                    return;
                 }
             }
             catch (Exception ex)
