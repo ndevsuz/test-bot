@@ -3,13 +3,17 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
-using TestBot.Models;
+using TestBot.Helpers;
+using TestBot.Interfaces;
 using TestBot.Services;
 using User = Telegram.Bot.Types.User;
 
 namespace TestBot.Handlers;
 
-public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOptions<BotConfiguration> botConfiguration)
+public class HandleUser(HandleNextUpdate handle,
+    IHandler handler, 
+    AdminService adminService,
+    IOptions<BotConfiguration> botConfiguration)
 {
     private readonly ITelegramBotClient _telegram = new TelegramBotClient(botConfiguration.Value.BotToken);
 
@@ -19,50 +23,68 @@ public class HandleUser(HandleNextUpdate handle, AdminService adminService, IOpt
         {
             var buttons = new KeyboardButton[][]
             {
-                new KeyboardButton[] { "\u2705Javobni tekshirish" },
+                ["Javobni tekshirish\ud83d\udd0d:"],
             };
             
-            await _telegram.SendTextMessageAsync(chat.Id, "Bosh menu:", replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true } );
+            await _telegram.SendTextMessageAsync(chat.Id, "Bosh menu\ud83c\udfe0:", replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true } );
 
             var userResponse = await handle.NewTextMessage(update);
 
             switch (userResponse)
             {
-                case "\u2705Javobni tekshirish":
+                case "Javobni tekshirish\ud83d\udd0d:":
                     await HandleExam(chat, update);
                     break;
-                case "/admin":
+                case "/panel":
+                    await handler.HandleAdminTask(chat, user, update);
                     return;
             }
-
-            return;
         }
     }
 
     private async Task HandleExam(Chat chat, UpdateInfo update)
     {
-        await _telegram.SendTextMessageAsync(chat.Id, "Ism familiyangizni kirting: ", replyMarkup: new ReplyKeyboardRemove());
+        var cancelButton = new[]
+        {
+            new KeyboardButton[] {"Bekor qilish\u274c"}
+        };
+
+        await _telegram.SendTextMessageAsync(chat.Id, "Ism familiyangizni kirting: ", replyMarkup: new ReplyKeyboardMarkup(cancelButton));
         var userName = await handle.NewTextMessage(update);
-
-        await _telegram.SendTextMessageAsync(chat.Id, "Javoblarni kiriting:\n Misol: {testid}*1a2b3c yoki {testid}*abc", replyMarkup: new ReplyKeyboardRemove());
-        var testMessage = await handle.NewTextMessage(update);
-
+        if (userName is "Bekor qilish\u274c")
+        {
+            await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.", replyMarkup: new ReplyKeyboardRemove());
+            return;
+        }
         string userAnswers;
         long testId = 0;
-        if (testMessage.Contains('*'))
+        await _telegram.SendTextMessageAsync(chat.Id, "Javoblarni kiriting:\n Misol: {testid}*1a2b3c yoki {testid}*abc");
+        while (true)
         {
-            var parts = testMessage.Split('*');
-            if (parts.Length != 2 || !long.TryParse(parts[0], out testId))
+            var testMessage = await handle.NewTextMessage(update);
+            if (testMessage is "Bekor qilish\u274c")
             {
-                await _telegram.SendTextMessageAsync(chat.Id, "Iltimos, misoldagidek kiriting:\nMisol: {testid}*1a2b3c yoki {testid}*abc");
+                await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.", replyMarkup: new ReplyKeyboardRemove());
                 return;
             }
-            userAnswers = parts[1];
-        }
-        else
-        {
+
+
+            if (testMessage.Contains('*'))
+            {
+                var parts = testMessage.Split('*');
+                if (parts.Length != 2 || !long.TryParse(parts[0], out testId))
+                {
+                    await _telegram.SendTextMessageAsync(chat.Id, "Iltimos, misoldagidek kiriting:\nMisol: {testid}*1a2b3c yoki {testid}*abc");
+                    continue;
+                }
+                userAnswers = parts[1];
+                break;
+            }
             userAnswers = testMessage;
+            break;
+
         }
+
 
         var test = await adminService.GetTestById(testId);
         if (test == null)

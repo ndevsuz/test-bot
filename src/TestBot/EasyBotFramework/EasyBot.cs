@@ -12,7 +12,7 @@ namespace TestBot.EasyBotFramework
 		private User Me { get; set; }
 		protected string BotName => Me.Username;
 
-		private int _lastUpdateId = -1;
+			private int _lastUpdateId = -1;
 		private readonly CancellationTokenSource _cancel = new();
 		private readonly Dictionary<long, TaskInfo> _tasks = new();
 
@@ -32,7 +32,7 @@ namespace TestBot.EasyBotFramework
 
 		private async Task RunAsync()
 		{
-			System.Console.WriteLine("Press Escape to stop the bot");
+			System.Console.WriteLine($"Press Escape to stop the {BotName} bot");
 			while (true)
 			{
 				var updates = await Telegram.GetUpdatesAsync(_lastUpdateId + 1, timeout: 2);
@@ -122,7 +122,7 @@ namespace TestBot.EasyBotFramework
 		public void ReplyCallback(UpdateInfo update, string text = null, bool showAlert = false, string url = null)
 		{
 			if (update.Update.Type != UpdateType.CallbackQuery)
-				throw new InvalidOperationException("This method can be called only for CallbackQuery updates");
+				throw new InvalidOperationException("This method can be called only for CallbackQue	ry updates");
 			_ = Telegram.AnswerCallbackQueryAsync(update.Update.CallbackQuery.Id, text, showAlert, url);
 		}
 	}

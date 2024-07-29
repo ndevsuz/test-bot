@@ -5,6 +5,8 @@ using TestBot;
 using TestBot.Contexts;
 using TestBot.EasyBotFramework;
 using TestBot.Handlers;
+using TestBot.Helpers;
+using TestBot.Interfaces;
 using TestBot.Repositories;
 using TestBot.Services;
 
@@ -25,13 +27,17 @@ IHost host = Host.CreateDefaultBuilder(args)
 		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
-		services.AddScoped<AdminService>();
-		services.AddScoped<HandleService>();
-		services.AddScoped<UserService>();
+		services.AddTransient<IHandler, Handler>();
+		services.AddTransient<AdminService>();
+		services.AddTransient<UserService>();
 		services.AddSingleton(new CancellationTokenSource());
 		services.AddScoped<HandleNextUpdate>();
 		services.AddScoped<HandleAdmin>();
 		services.AddScoped<HandleUser>();
+
+		services.AddTransient<Lazy<IHandler>>(sp => new Lazy<IHandler>(() => sp.GetRequiredService<IHandler>()));
+		services.AddScoped<HandleService>();
+		
 		services.AddDbContext<AppDbContext>(options =>
 			options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));	
 

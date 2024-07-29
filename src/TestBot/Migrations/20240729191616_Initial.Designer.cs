@@ -12,8 +12,8 @@ using TestBot.Contexts;
 namespace TestBot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240721090529_Second")]
-    partial class Second
+    [Migration("20240729191616_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,8 +45,14 @@ namespace TestBot.Migrations
                     b.Property<string>("CreatorUser")
                         .HasColumnType("text");
 
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRewarded")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 

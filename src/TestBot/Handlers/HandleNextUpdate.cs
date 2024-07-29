@@ -47,6 +47,7 @@ public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, Cance
     
     public async Task<string> ButtonClicked(UpdateInfo update, Message msg = null, CancellationToken ct = default)
     {
+        /*
         while (true)
         {
             switch (await NextEvent(update, ct))
@@ -59,6 +60,9 @@ public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, Cance
                     continue;
             }
         }
+        */
+        var nextEvent = await NextEvent(update, ct);
+        return update.CallbackData;
     }
 
 }

@@ -30,6 +30,8 @@ public class AdminService(ITestRepository testRepository)
             Answers = dto.Answers,
             CreatedAt = DateTime.UtcNow.AddHours(5),
             CreatorUser = dto.CreatorUser,
+            CreatorUserId = dto.CreatorUserId,
+            IsRewarded = dto.IsRewarded,
             ExpirationDate = dto.ExpirationDate
         };
 

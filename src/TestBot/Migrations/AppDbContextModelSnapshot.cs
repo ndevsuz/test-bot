@@ -42,8 +42,14 @@ namespace TestBot.Migrations
                     b.Property<string>("CreatorUser")
                         .HasColumnType("text");
 
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRewarded")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
