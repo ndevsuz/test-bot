@@ -1,3 +1,4 @@
+using AnswerBot.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
@@ -27,6 +28,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 		services.AddHostedService<TestExpirationService>();
 		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();
+		services.AddScoped<IAnswerRepository, AnswerRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddTransient<IHandler, Handler>();
 		services.AddTransient<AdminService>();

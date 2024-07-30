@@ -27,7 +27,7 @@ public class AdminService(ITestRepository testRepository)
         var newTest = new Test()
         {
             Amount = dto.Amount,
-            Answers = dto.Answers,
+            Answers = string.Join("",CreateDictionaryFromInput(dto.Answers).Values),
             CreatedAt = DateTime.UtcNow.AddHours(5),
             CreatorUser = dto.CreatorUser,
             CreatorUserId = dto.CreatorUserId,

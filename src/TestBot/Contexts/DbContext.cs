@@ -9,5 +9,6 @@ public class AppDbContext : DbContext
     { }
     
     public DbSet<Test> Tests { get; set; }
+    public DbSet<Answer> Answers { get; set; }
     public DbSet<User> Users { get; set; }
 }
