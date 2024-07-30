@@ -27,7 +27,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 			});
 		
 		services.AddDbContext<AppDbContext>(options =>
-			options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));	
+				options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));
 
 		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();

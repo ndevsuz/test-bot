@@ -1,5 +1,7 @@
+using System.Text;
 using AnswerBot.Repositories;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using TestBot.Models;
 using TestBot.Repositories;
 using TestBot.Services;
@@ -7,61 +9,67 @@ using TestBot.Services;
 public class TestExpirationService : BackgroundService
 {
     private readonly ILogger<TestExpirationService> _logger;
-    private readonly ITestRepository _testRepository;
-    private readonly IAnswerRepository _answerRepository;
-    private readonly HandleService _handleService; 
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public TestExpirationService(
         ILogger<TestExpirationService> logger,
-        ITestRepository testRepository,
-        HandleService handleService, IAnswerRepository answerRepository)
+        IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
-        _testRepository = testRepository;
-        _handleService = handleService;
-        _answerRepository = answerRepository;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+{
+    while (!stoppingToken.IsCancellationRequested)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            using var scope = _serviceScopeFactory.CreateScope();
+            var testRepository = scope.ServiceProvider.GetRequiredService<ITestRepository>();
+            var answerRepository = scope.ServiceProvider.GetRequiredService<IAnswerRepository>();
+            var handleService = scope.ServiceProvider.GetRequiredService<HandleService>();
+
+            var expiredTests = testRepository
+                .SelectAll(x => x.ExpirationDate <= DateTime.Now && x.IsRewarded)
+                .ToList();
+            foreach (var test in expiredTests)
             {
-                var expiredTests = _testRepository.SelectAll(x => x.ExpirationDate > DateTime.Now).ToList();
-                foreach (var test in expiredTests)
+                var answers = answerRepository.SelectAll(x => x.TestId == test.Id).ToList();
+                var topAnswers = GetTopAnswers(answers, test.Answers);
+
+                var messageBuilder = new StringBuilder();
+                messageBuilder.AppendLine("🏆 *Sertefikatli testni vaqti tugadi\\!*");
+                messageBuilder.AppendLine($"📝 *Testning nomi:* {EscapeMarkdown(test.Name)}");
+                messageBuilder.AppendLine();
+
+                string[] places = { "🥇 1\\-chi o'rin:", "🥈 2\\-chi o'rin:", "🥉 3\\-chi o'rin:" };
+
+                for (int i = 0; i < topAnswers.Count; i++)
                 {
-                    if (test.IsRewarded is true && test.CreatorUserId.HasValue)
-                    {
-                        var answers = _answerRepository.SelectAll(x => x.TestId == test.Id).ToList();
-                        answers = GetTopAnswers(answers, test.Answers);
-
-                        foreach (var answer in answers)
-                        {   
-                            
-                            await _handleService.Telegram.SendTextMessageAsync(
-                                answer.UserId,
-                                $"Testni onasini emdirib tashabsiz natijez : {answer.Percentage}"
-                            );
-                            
-                            await _handleService.Telegram.SendTextMessageAsync(
-                                test.CreatorUserId.Value,
-                                $"mano user sizi teztizi tikib qoyibdi {answer.UserId} uni natijasi {answer.Percentage}"
-                            );
-                        }
-                    }
+                    var answer = topAnswers[i];
+                    messageBuilder.AppendLine(places[i]);
+                    messageBuilder.AppendLine($"👤 Ismi: {EscapeMarkdown(answer.UserName)}");
+                    messageBuilder.AppendLine($"📊 Foiz: {answer.Percentage}%");
+                    if (i < topAnswers.Count - 1) messageBuilder.AppendLine();
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while checking for expired tests.");
-            }
 
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                await handleService.Telegram.SendTextMessageAsync(
+                    test.CreatorUserId.Value,
+                    messageBuilder.ToString(),
+                    parseMode: ParseMode.MarkdownV2,
+                    cancellationToken: stoppingToken
+                );
+            }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while checking for expired tests.");
+        }
+
+        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
     }
-    
-    private static int CalculatePercentage(string correctAnswers, string userAnswers)
+}    private static int CalculatePercentage(string correctAnswers, string userAnswers)
     {
         if (correctAnswers.Length != userAnswers.Length)
         {
@@ -81,7 +89,7 @@ public class TestExpirationService : BackgroundService
         return (int)((double)correctCount / correctAnswers.Length * 100);
     }
 
-    public static List<Answer> GetTopAnswers(List<Answer> answers, string correctAnswersString)
+    private static List<Answer> GetTopAnswers(List<Answer> answers, string correctAnswersString)
     {
         var result = answers.Select(answer => new
             {
@@ -102,4 +110,14 @@ public class TestExpirationService : BackgroundService
             .Select(r => r.Answer)
             .ToList();
     }
+    
+    public static string EscapeMarkdown(string text)
+    {
+        return text.Replace("_", "\\_").Replace("*", "\\*").Replace("[", "\\[").Replace("]", "\\]")
+            .Replace("(", "\\(").Replace(")", "\\)").Replace("~", "\\~").Replace("`", "\\`")
+            .Replace(">", "\\>").Replace("#", "\\#").Replace("+", "\\+").Replace("-", "\\-")
+            .Replace("=", "\\=").Replace("|", "\\|").Replace("{", "\\{").Replace("}", "\\}")
+            .Replace(".", "\\.").Replace("!", "\\!");
+    }
+
 }

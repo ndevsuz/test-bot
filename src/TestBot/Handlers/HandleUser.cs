@@ -15,7 +15,7 @@ namespace TestBot.Handlers;
 
 public class HandleUser(HandleNextUpdate handle,
     Lazy<IHandler> handler, 
-    AnswerRepository answerRepository,
+    IAnswerRepository answerRepository,
     AdminService adminService,
     IOptions<BotConfiguration> botConfiguration)
 {
@@ -114,7 +114,8 @@ public class HandleUser(HandleNextUpdate handle,
         {
             Answers = string.Join("",CreateDictionaryFromInput(userAnswers).Values),
             TestId = testId,
-            UserId = chat.Id
+            UserId = chat.Id,
+            UserName = chat.FirstName
         };
 
         await answerRepository.AddAsync(answers);
