@@ -24,7 +24,10 @@ IHost host = Host.CreateDefaultBuilder(args)
 				TelegramBotClientOptions options = new(botConfiguration.BotToken);
 				return new TelegramBotClient(options, httpClient);
 			});
-		services.AddHostedService<TestExpirationService>();
+		
+		services.AddDbContext<AppDbContext>(options =>
+			options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));	
+
 		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
@@ -41,10 +44,8 @@ IHost host = Host.CreateDefaultBuilder(args)
 		
 		services.AddTransient<IHandler, Handler>();
 		services.AddTransient<Lazy<IHandler>>(sp => new Lazy<IHandler>(() => sp.GetRequiredService<IHandler>()));
-
 		
-		services.AddDbContext<AppDbContext>(options =>
-			options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));	
+		services.AddHostedService<TestExpirationService>();
 
 	})
 	.Build();

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
 using TestBot.Interfaces;
@@ -28,6 +29,7 @@ namespace TestBot.Handlers
                         ["Yangi test\ud83c\udd95"],
                         ["Testlarni ko'rish\ud83d\udc40"],
                         ["Testni o'chirish\ud83d\uddd1"],
+                        ["Paneldan chiqish\ud83d\udeaa"]
                     };
 
                     await _telegram.SendTextMessageAsync(chat.Id, "Panel menu\ud83d\udee0\ufe0f :",
@@ -46,8 +48,8 @@ namespace TestBot.Handlers
                         case "Testni o'chirish\ud83d\uddd1":
                             await HandleDeleteTest(chat, update);
                             break;
-                        case "Paneldan chiqish":
-                            await handler.Value.HandleAdminTask(chat, user, update);
+                        case "Paneldan chiqish\ud83d\udeaa":
+                            await handler.Value.HandleUserTask(chat, user, update);
                             return;
                         default:
                             await _telegram.SendTextMessageAsync(chat.Id, "Foydalanuvchi rejimiga otish uchun yana bir marotaba bosing.",
@@ -93,9 +95,17 @@ namespace TestBot.Handlers
                     dto.IsRewarded = false;
                     break;
             }
-
-            await _telegram.SendTextMessageAsync(chat.Id, "Ismingiz va familiyangizni kiriting",
+            await _telegram.SendTextMessageAsync(chat.Id, "Testning nomini kiriting: ",
                 replyMarkup: new ReplyKeyboardMarkup(cancelButton));
+            var testName = await handle.NewTextMessage(update);
+            if (testName == "Bekor qilish")
+            {
+                await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
+                return;
+            }
+            dto.Name = testName;
+
+            await _telegram.SendTextMessageAsync(chat.Id, "Ismingiz va familiyangizni kiriting");
             var creatorUser = await handle.NewTextMessage(update);
             if (creatorUser == "Bekor qilish")
             {
@@ -119,7 +129,7 @@ namespace TestBot.Handlers
                 return;
             }
             dto.Amount = amount;
-            await _telegram.SendTextMessageAsync(chat.Id, "Javoblarni kiriting (abcdab yoki 1a2b3c4d5a6b) korinishida");
+            await _telegram.SendTextMessageAsync(chat.Id, "\u2705Testning javoblarini kiriting\\.\n\n\u270d\ufe0fMisol uchun: \n>abcdabcdabcd\\.\\.\\.  yoki\n>1a2b3c4d5a6b7c\\.\\.\\.", parseMode:ParseMode.MarkdownV2);
             var answers = await handle.NewTextMessage(update);
             if (answers == "Bekor qilish")
             {
@@ -178,7 +188,7 @@ namespace TestBot.Handlers
             }
 
             await _telegram.SendTextMessageAsync(chat.Id, test,
-                replyMarkup: new ReplyKeyboardMarkup(new[] { new KeyboardButton("Boshqa testni ko'rish") }) { ResizeKeyboard = true });
+                replyMarkup: new ReplyKeyboardRemove(), parseMode: ParseMode.MarkdownV2);
         }
 
         private async Task HandleDeleteTest(Chat chat, UpdateInfo update)

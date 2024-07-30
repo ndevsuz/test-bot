@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
 using TestBot.Helpers;
@@ -58,7 +59,9 @@ public class HandleUser(HandleNextUpdate handle,
         }
         string userAnswers;
         long testId = 0;
-        await _telegram.SendTextMessageAsync(chat.Id, "\u2705Test kodini kiritib * (yulduzcha) belgisini qo'yasiz va barcha kalitni kiritasiz.\n\n\u270d\ufe0fMisol uchun: \n 123*abcdabcdabcd...  yoki\n 123*1a2b3c4d5a6b7c...");
+        await _telegram.SendTextMessageAsync(chat.Id, 
+            "\u2705Test kodini kiritib \\* \\(yulduzcha\\) belgisini qo'yasiz va barcha kalitni kiritasiz\\.\n\n\u270d\ufe0fMisol uchun: \n>123\\*abcdabcdabcd\\.\\.\\.  yoki\n>123\\*1a2b3c4d5a6b7c\\.\\.\\.",
+            parseMode: ParseMode.MarkdownV2);        
         while (true)
         {
             var testMessage = await handle.NewTextMessage(update);
