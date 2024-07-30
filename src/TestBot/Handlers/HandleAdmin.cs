@@ -11,7 +11,7 @@ namespace TestBot.Handlers
 {
     public class HandleAdmin(
         HandleNextUpdate handle,
-        IHandler handler,
+        Lazy<IHandler> handler,
         IOptions<BotConfiguration> botConfiguration,
         AdminService adminService)
     {
@@ -47,7 +47,7 @@ namespace TestBot.Handlers
                             await HandleDeleteTest(chat, update);
                             break;
                         case "Paneldan chiqish":
-                            await handler.HandleAdminTask(chat, user, update);
+                            await handler.Value.HandleAdminTask(chat, user, update);
                             return;
                         default:
                             await _telegram.SendTextMessageAsync(chat.Id, "Foydalanuvchi rejimiga otish uchun yana bir marotaba bosing.",

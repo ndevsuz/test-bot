@@ -11,7 +11,7 @@ using User = Telegram.Bot.Types.User;
 namespace TestBot.Handlers;
 
 public class HandleUser(HandleNextUpdate handle,
-    IHandler handler, 
+    Lazy<IHandler> handler, 
     AdminService adminService,
     IOptions<BotConfiguration> botConfiguration)
 {
@@ -36,7 +36,7 @@ public class HandleUser(HandleNextUpdate handle,
                     await HandleExam(chat, update);
                     break;
                 case "/panel":
-                    await handler.HandleAdminTask(chat, user, update);
+                    await handler.Value.HandleAdminTask(chat, user, update);
                     return;
             }
         }
@@ -58,7 +58,7 @@ public class HandleUser(HandleNextUpdate handle,
         }
         string userAnswers;
         long testId = 0;
-        await _telegram.SendTextMessageAsync(chat.Id, "Javoblarni kiriting:\n Misol: {testid}*1a2b3c yoki {testid}*abc");
+        await _telegram.SendTextMessageAsync(chat.Id, "\u2705Test kodini kiritib * (yulduzcha) belgisini qo'yasiz va barcha kalitni kiritasiz.\n\n\u270d\ufe0fMisol uchun: \n 123*abcdabcdabcd...  yoki\n 123*1a2b3c4d5a6b7c...");
         while (true)
         {
             var testMessage = await handle.NewTextMessage(update);

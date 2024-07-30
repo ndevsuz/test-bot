@@ -28,16 +28,20 @@ IHost host = Host.CreateDefaultBuilder(args)
 		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
-		services.AddTransient<IHandler, Handler>();
-		services.AddTransient<AdminService>();
-		services.AddTransient<UserService>();
 		services.AddSingleton(new CancellationTokenSource());
 		services.AddScoped<HandleNextUpdate>();
 		services.AddScoped<HandleAdmin>();
 		services.AddScoped<HandleUser>();
-
-		services.AddTransient<Lazy<IHandler>>(sp => new Lazy<IHandler>(() => sp.GetRequiredService<IHandler>()));
 		services.AddScoped<HandleService>();
+		services.AddScoped<UserService>();
+		services.AddScoped<AdminService>();
+		
+		services.AddTransient<Lazy<HandleAdmin>>(sp => new Lazy<HandleAdmin>(() => sp.GetRequiredService<HandleAdmin>()));
+		services.AddTransient<Lazy<HandleUser>>(sp => new Lazy<HandleUser>(() => sp.GetRequiredService<HandleUser>()));
+		
+		services.AddTransient<IHandler, Handler>();
+		services.AddTransient<Lazy<IHandler>>(sp => new Lazy<IHandler>(() => sp.GetRequiredService<IHandler>()));
+
 		
 		services.AddDbContext<AppDbContext>(options =>
 			options.UseNpgsql(context.Configuration.GetConnectionString("DefaultConnection")));	
