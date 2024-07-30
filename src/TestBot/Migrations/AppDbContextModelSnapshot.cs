@@ -51,6 +51,10 @@ namespace TestBot.Migrations
                     b.Property<bool>("IsRewarded")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.ToTable("Tests");

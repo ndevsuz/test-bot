@@ -3,6 +3,7 @@ namespace TestBot.Models;
 public class Test
 {
     public long Id { get; set; }
+    public string Name { get; set; }
     public int Amount { get; set; }
     public string? Answers { get; set; }
     public string? CreatorUser { get; set; }

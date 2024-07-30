@@ -32,7 +32,7 @@ namespace TestBot.EasyBotFramework
 
 		private async Task RunAsync()
 		{
-			System.Console.WriteLine($"Press Escape to stop the {BotName} bot");
+			Console.WriteLine($"Press Escape to stop the {BotName} bot");
 			while (true)
 			{
 				var updates = await Telegram.GetUpdatesAsync(_lastUpdateId + 1, timeout: 2);

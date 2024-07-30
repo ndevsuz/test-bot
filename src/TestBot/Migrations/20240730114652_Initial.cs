@@ -18,6 +18,7 @@ namespace TestBot.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false),
                     Amount = table.Column<int>(type: "integer", nullable: false),
                     Answers = table.Column<string>(type: "text", nullable: true),
                     CreatorUser = table.Column<string>(type: "text", nullable: true),

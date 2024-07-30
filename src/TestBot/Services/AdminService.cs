@@ -26,6 +26,7 @@ public class AdminService(ITestRepository testRepository)
 
         var newTest = new Test()
         {
+            Name = dto.Name,
             Amount = dto.Amount,
             Answers = string.Join("",CreateDictionaryFromInput(dto.Answers).Values),
             CreatedAt = DateTime.UtcNow.AddHours(5),
@@ -103,12 +104,26 @@ public class AdminService(ITestRepository testRepository)
     private static string ConvertTestsToStrings(Test test)
     {
         return $@"
-            ID : {test.Id}
-            Tuzuvchi : {test.CreatorUser}
-            Testlar soni: {test.Amount}
-            Javoblar : {test.Answers}
-            Yaratilgan vaqti: {test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
-            Yakunlanadigan vaqti : {test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"}
-            ";
+        🆔 *ID :* {EscapeMarkdown(test.Id.ToString())}
+        📝 *Test nomi :* {EscapeMarkdown(test.Name)}
+        👤 *Tuzuvchi :* {EscapeMarkdown(test.CreatorUser)}
+        🔢 *Testlar soni:* {test.Amount}
+        ✅ *Javoblar :* {EscapeMarkdown(test.Answers)}
+        🕒 *Yaratilgan vaqti:* {EscapeMarkdown(test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan")}
+        ⏳ *Yakunlanadigan vaqti :* {(EscapeMarkdown(test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"))}
+        ";
     }
+    private static string EscapeMarkdown(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+
+        string[] specialCharacters = new[] { "_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!" };
+        foreach (var character in specialCharacters)
+        {
+            text = text.Replace(character, "\\" + character);
+        }
+        return text;
+    }
+
 }

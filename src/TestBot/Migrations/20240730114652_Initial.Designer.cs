@@ -12,7 +12,7 @@ using TestBot.Contexts;
 namespace TestBot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240729191616_Initial")]
+    [Migration("20240730114652_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -53,6 +53,10 @@ namespace TestBot.Migrations
 
                     b.Property<bool>("IsRewarded")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
