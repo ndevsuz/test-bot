@@ -7,7 +7,7 @@ namespace TestBot.EasyBotFramework
 {
 	public class EasyBot	// A fun way to code Telegram Bots, by Wizou
 	{
-		protected readonly TelegramBotClient Telegram;
+		public readonly TelegramBotClient Telegram;
 		protected IConfiguration _configuration;
 		private User Me { get; set; }
 		protected string BotName => Me.Username;

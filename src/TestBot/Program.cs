@@ -24,6 +24,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 				TelegramBotClientOptions options = new(botConfiguration.BotToken);
 				return new TelegramBotClient(options, httpClient);
 			});
+		services.AddHostedService<TestExpirationService>();
 		services.AddSingleton(context.Configuration);
 		services.AddScoped<ITestRepository, TestRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
