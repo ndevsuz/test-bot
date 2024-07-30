@@ -4,7 +4,7 @@
     {
         public long Id { get; set; }
         public string Answers { get; set; }
-        public int Percentage { get; set; }
+        public int? Percentage { get; set; }
         public long UserId { get; set; }
         
         public long TestId { get; set; }

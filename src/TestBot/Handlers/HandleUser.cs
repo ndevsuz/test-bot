@@ -1,3 +1,4 @@
+using AnswerBot.Repositories;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -6,6 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using TestBot.EasyBotFramework;
 using TestBot.Helpers;
 using TestBot.Interfaces;
+using TestBot.Models;
 using TestBot.Services;
 using User = Telegram.Bot.Types.User;
 
@@ -13,6 +15,7 @@ namespace TestBot.Handlers;
 
 public class HandleUser(HandleNextUpdate handle,
     Lazy<IHandler> handler, 
+    AnswerRepository answerRepository,
     AdminService adminService,
     IOptions<BotConfiguration> botConfiguration)
 {
@@ -106,6 +109,16 @@ public class HandleUser(HandleNextUpdate handle,
         var (percentage, correctCount, incorrectCount) = CalculateCorrectAnswerPercentage(userAnswers, correctAnswers);
 
         await _telegram.SendTextMessageAsync(chat.Id, $"\ud83d\udc64Foydalanuvchi: {userName}\n\n \u270d\ud83c\udfffMuallif: {test.CreatorUser}\n \ud83d\udcd6Jami savollar: {test.Amount}\n \u2705Tog'ri javoblar: {correctCount}\n \ud83d\udd0dFoyiz: {percentage}");
+
+        var answers = new Answer()
+        {
+            Answers = string.Join("",CreateDictionaryFromInput(userAnswers).Values),
+            TestId = testId,
+            UserId = chat.Id
+        };
+
+        await answerRepository.AddAsync(answers);
+        await answerRepository.SaveAsync();
     }
 
     private (double percentage, int correctCount, int incorrectCount) CalculateCorrectAnswerPercentage(string userAnswers, string correctAnswers)
@@ -155,5 +168,34 @@ public class HandleUser(HandleNextUpdate handle,
         }
 
         return answerDict;
+    }
+    
+    private static Dictionary<int, char> CreateDictionaryFromInput(string input)
+    {
+        var dictionary = new Dictionary<int, char>();
+        var i = 0;
+
+        while (i < input.Length)
+        {
+            var j = i;
+            while (j < input.Length && char.IsDigit(input[j]))
+            {
+                j++;
+            }
+            
+            if (j < input.Length && j > i && char.IsLetter(input[j]))
+            {
+                var key = int.Parse(input.Substring(i, j - i));
+                var value = input[j];
+                dictionary[key] = value;
+                i = j + 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return dictionary;
     }
 } 
