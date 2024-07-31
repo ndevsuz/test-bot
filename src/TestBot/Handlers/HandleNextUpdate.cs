@@ -11,27 +11,24 @@ namespace TestBot.Handlers;
 public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, CallbackService callbackService, CancellationTokenSource cancel)
 {
     private readonly ITelegramBotClient _telegram = new TelegramBotClient(botConfiguration.Value.BotToken);
-    public async Task<string?> NewTextMessage(UpdateInfo update, CancellationToken ct = default)
+    public async Task<string?> NewTextMessage(UpdateInfo updateInfo, Update update, CancellationToken ct = default)
     {
-        while (await NewMessage(update, ct) != MsgCategory.Text) { }
-        return update.Message.Text;
+        while (await NewMessage(updateInfo, update, ct) != MsgCategory.Text) { }
+        return updateInfo.Message.Text;
     }
 
-    private async Task<MsgCategory> NewMessage(UpdateInfo update, CancellationToken ct = default)
+    private async Task<MsgCategory> NewMessage(UpdateInfo updateInfo, Update update, CancellationToken ct = default)
     {
         while (true)
         {
-            switch (await NextEvent(update, ct))
+            switch (await NextEvent(updateInfo, ct))
             {
                 case UpdateKind.NewMessage
-                    when update.MsgCategory is MsgCategory.Text or MsgCategory.MediaOrDoc or MsgCategory.StickerOrDice:
-                    return update.MsgCategory; // NewMessage only returns for messages from these 3 categories
+                    when updateInfo.MsgCategory is MsgCategory.Text or MsgCategory.MediaOrDoc or MsgCategory.StickerOrDice:
+                    return updateInfo.MsgCategory; // NewMessage only returns for messages from these 3 categories
                 case UpdateKind.CallbackQuery:
-                    
-                case UpdateKind.OtherUpdate
-                    when update.Update.MyChatMember is ChatMemberUpdated
-                        { NewChatMember.Status: ChatMemberStatus.Left or ChatMemberStatus.Kicked }:
-                    throw new LeftTheChatException(); // abort the calling method
+                    await callbackService.HandleCallbackQueryAsync(_telegram, update.CallbackQuery);
+                    return updateInfo.MsgCategory;
             }
         }
     }

@@ -13,8 +13,9 @@ using User = Telegram.Bot.Types.User;
 
 namespace TestBot.Handlers;
 
-public class HandleUser(HandleNextUpdate handle,
-    Lazy<IHandler> handler, 
+public class HandleUser(
+    HandleNextUpdate handle,
+    Lazy<IHandler> handler,
     IAnswerRepository answerRepository,
     AdminService adminService,
     IOptions<BotConfiguration> botConfiguration)
@@ -23,21 +24,22 @@ public class HandleUser(HandleNextUpdate handle,
 
     public async Task Handle(Chat chat, User user, UpdateInfo updateInfo, Update update)
     {
-        while(true) 
+        while (true)
         {
             var buttons = new KeyboardButton[][]
             {
                 ["Javobni tekshirish\ud83d\udd0d:"],
             };
-            
-            await _telegram.SendTextMessageAsync(chat.Id, "Bosh menu\ud83c\udfe0:", replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true } );
 
-            var userResponse = await handle.NewTextMessage(updateInfo);
+            await _telegram.SendTextMessageAsync(chat.Id, "Bosh menu\ud83c\udfe0:",
+                replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true });
+
+            var userResponse = await handle.NewTextMessage(updateInfo, update);
 
             switch (userResponse)
             {
                 case "Javobni tekshirish\ud83d\udd0d:":
-                    await HandleExam(chat, updateInfo);
+                    await HandleExam(chat, updateInfo, update);
                     break;
                 case "/panel":
                     await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
@@ -46,28 +48,30 @@ public class HandleUser(HandleNextUpdate handle,
         }
     }
 
-    private async Task HandleExam(Chat chat, UpdateInfo updateInfo)
+    private async Task HandleExam(Chat chat, UpdateInfo updateInfo, Update update)
     {
         var cancelButton = new[]
         {
-            new KeyboardButton[] {"Bekor qilish\u274c"}
+            new KeyboardButton[] { "Bekor qilish\u274c" }
         };
 
-        await _telegram.SendTextMessageAsync(chat.Id, "Ism familiyangizni kirting: ", replyMarkup: new ReplyKeyboardMarkup(cancelButton));
-        var userName = await handle.NewTextMessage(updateInfo);
+        await _telegram.SendTextMessageAsync(chat.Id, "Ism familiyangizni kirting: ",
+            replyMarkup: new ReplyKeyboardMarkup(cancelButton));
+        var userName = await handle.NewTextMessage(updateInfo, update);
         if (userName is "Bekor qilish\u274c")
         {
             await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.", replyMarkup: new ReplyKeyboardRemove());
             return;
         }
+
         string userAnswers;
         long testId = 0;
-        await _telegram.SendTextMessageAsync(chat.Id, 
+        await _telegram.SendTextMessageAsync(chat.Id,
             "\u2705Test kodini kiritib \\* \\(yulduzcha\\) belgisini qo'yasiz va barcha kalitni kiritasiz\\.\n\n\u270d\ufe0fMisol uchun: \n>123\\*abcdabcdabcd\\.\\.\\.  yoki\n>123\\*1a2b3c4d5a6b7c\\.\\.\\.",
-            parseMode: ParseMode.MarkdownV2);        
+            parseMode: ParseMode.MarkdownV2);
         while (true)
         {
-            var testMessage = await handle.NewTextMessage(updateInfo);
+            var testMessage = await handle.NewTextMessage(updateInfo, update);
             if (testMessage is "Bekor qilish\u274c")
             {
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.", replyMarkup: new ReplyKeyboardRemove());
@@ -80,12 +84,15 @@ public class HandleUser(HandleNextUpdate handle,
                 var parts = testMessage.Split('*');
                 if (parts.Length != 2 || !long.TryParse(parts[0], out testId))
                 {
-                    await _telegram.SendTextMessageAsync(chat.Id, "Iltimos, misoldagidek kiriting:\nMisol: {testid}*1a2b3c yoki {testid}*abc");
+                    await _telegram.SendTextMessageAsync(chat.Id,
+                        "Iltimos, misoldagidek kiriting:\nMisol: {testid}*1a2b3c yoki {testid}*abc");
                     continue;
                 }
+
                 userAnswers = parts[1];
                 break;
             }
+
             userAnswers = testMessage;
             break;
 
@@ -123,7 +130,7 @@ public class HandleUser(HandleNextUpdate handle,
 
         var answers = new Answer()
         {
-            Answers = string.Join("",CreateDictionaryFromInput(userAnswers).Values),
+            Answers = string.Join("", CreateDictionaryFromInput(userAnswers).Values),
             TestId = testId,
             UserId = chat.Id,
             UserName = chat.FirstName
@@ -131,10 +138,8 @@ public class HandleUser(HandleNextUpdate handle,
 
         await answerRepository.AddAsync(answers);
         await answerRepository.SaveAsync();
-        
-        await SendResultToCreatorUserAsync(chat, updateInfo, userName,test, correctCount, percentage);
 
-        await Task.Delay(1);
+        await SendResultToCreatorUserAsync(chat, updateInfo, userName, test, correctCount, percentage);
     }
 
     private static string EscapeMarkdown(string text)
@@ -147,7 +152,8 @@ public class HandleUser(HandleNextUpdate handle,
     }
 
 
-    private (double percentage, int correctCount, int incorrectCount) CalculateCorrectAnswerPercentage(string userAnswers, string correctAnswers)
+    private (double percentage, int correctCount, int incorrectCount) CalculateCorrectAnswerPercentage(
+        string userAnswers, string correctAnswers)
     {
         var correctAnswerDict = ParseAnswers(correctAnswers);
         var userAnswerDict = ParseAnswers(userAnswers);
@@ -155,7 +161,8 @@ public class HandleUser(HandleNextUpdate handle,
         int correctCount = 0;
         foreach (var userAnswer in userAnswerDict)
         {
-            if (correctAnswerDict.TryGetValue(userAnswer.Key, out var correctAnswer) && userAnswer.Value == correctAnswer)
+            if (correctAnswerDict.TryGetValue(userAnswer.Key, out var correctAnswer) &&
+                userAnswer.Value == correctAnswer)
             {
                 correctCount++;
             }
@@ -195,7 +202,7 @@ public class HandleUser(HandleNextUpdate handle,
 
         return answerDict;
     }
-    
+
     private static Dictionary<int, char> CreateDictionaryFromInput(string input)
     {
         var dictionary = new Dictionary<int, char>();
@@ -208,7 +215,7 @@ public class HandleUser(HandleNextUpdate handle,
             {
                 j++;
             }
-            
+
             if (j < input.Length && j > i && char.IsLetter(input[j]))
             {
                 var key = int.Parse(input.Substring(i, j - i));
@@ -225,24 +232,28 @@ public class HandleUser(HandleNextUpdate handle,
         return dictionary;
     }
 
-    private async Task SendResultToCreatorUserAsync(Chat chat, UpdateInfo updateInfo, string userName, Test test, int correctCount, double percentage)
-        {
-        string message = $@"*🔔Sizning testingizga javob berildi!* 
-
-
+    private async Task SendResultToCreatorUserAsync(Chat chat, UpdateInfo updateInfo, string userName, Test test,
+        int correctCount, double percentage)
+    {
+        string message = $@"*🔔Sizning testingizga javob berildi\!*
+🆔 ID {test.Id}
 👤 *Foydalanuvchi:* [{EscapeMarkdown(userName)}](tg://user?id={chat.Id})
 📝 *Testning nomi:* {EscapeMarkdown(test.Name)}
 ✍️ *Muallif:* {EscapeMarkdown(test.CreatorUser)}
 🔢 *Jami savollar:* {test.Amount}
 ✅ *Tog'ri javoblar:* {correctCount}
-📊 *Foyiz:* {percentage}%";
+📊 *Foyiz:* {percentage:F2}\\%";
 
-        var inlineButton = new InlineKeyboardMarkup(new InlineKeyboardButton[]
+        var inlineButton = new InlineKeyboardMarkup(new[]
         {
-            new("Batafsil📊") { CallbackData = "GetDetails" },
+            InlineKeyboardButton.WithCallbackData("Batafsil📊", "GetDetails"),
         });
 
-        await _telegram.SendTextMessageAsync(test.CreatorUserId,
-        message, replyMarkup: inlineButton, parseMode: ParseMode.MarkdownV2);
-        }
-} 
+        await _telegram.SendTextMessageAsync(
+            chatId: test.CreatorUserId,
+            text: message,
+            parseMode: ParseMode.MarkdownV2,
+            replyMarkup: inlineButton
+        );
+    }
+}

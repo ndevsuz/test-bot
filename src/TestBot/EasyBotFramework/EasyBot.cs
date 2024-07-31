@@ -61,7 +61,6 @@ namespace TestBot.EasyBotFramework
 		/// <summary>Use this method in your WebHook controller</summary>
 		private void HandleUpdate(Update update)
 		{
-			
 			if (update.Id <= _lastUpdateId) return;
 			_lastUpdateId = update.Id;
 			switch (update.Type)

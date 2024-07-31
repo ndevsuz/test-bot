@@ -35,18 +35,18 @@ namespace TestBot.Handlers
                     await _telegram.SendTextMessageAsync(chat.Id, "Panel menu\ud83d\udee0\ufe0f :",
                         replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true });
 
-                    var adminResponse = await handle.NewTextMessage(updateInfo);
+                    var adminResponse = await handle.NewTextMessage(updateInfo, update);
 
                     switch (adminResponse)
                     {
                         case "Yangi test\ud83c\udd95":
-                            await HandleNewTest(chat, updateInfo);
+                            await HandleNewTest(chat, updateInfo, update);
                             break;
                         case "Testlarni ko'rish\ud83d\udc40":   
-                            await HandleViewTests(chat, updateInfo);
+                            await HandleViewTests(chat, updateInfo, update);
                             break;
                         case "Testni o'chirish\ud83d\uddd1":
-                            await HandleDeleteTest(chat, updateInfo);
+                            await HandleDeleteTest(chat, updateInfo, update);
                             break;
                         case "Paneldan chiqish\ud83d\udeaa":
                             await handler.Value.HandleUserTask(chat, user, updateInfo, update);
@@ -64,7 +64,7 @@ namespace TestBot.Handlers
             }
         }
 
-        private async Task HandleNewTest(Chat chat, UpdateInfo updateInfo)
+        private async Task HandleNewTest(Chat chat, UpdateInfo updateInfo, Update update)
         {
             var dto = new TestCreationModel();
             
@@ -82,7 +82,7 @@ namespace TestBot.Handlers
 
             await _telegram.SendTextMessageAsync(chat.Id, "Testni turini tanlang: ",
                 replyMarkup: new ReplyKeyboardMarkup(buttons));
-            var testTypeResult = await handle.NewTextMessage(updateInfo);
+            var testTypeResult = await handle.NewTextMessage(updateInfo, update);
             switch (testTypeResult)
             {
                 case "Bekor qilish":
@@ -100,7 +100,7 @@ namespace TestBot.Handlers
             }
             await _telegram.SendTextMessageAsync(chat.Id, "Testning nomini kiriting: ",
                 replyMarkup: new ReplyKeyboardMarkup(cancelButton));
-            var testName = await handle.NewTextMessage(updateInfo);
+            var testName = await handle.NewTextMessage(updateInfo, update);
             if (testName == "Bekor qilish")
             {
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
@@ -109,7 +109,7 @@ namespace TestBot.Handlers
             dto.Name = testName;
 
             await _telegram.SendTextMessageAsync(chat.Id, "Ismingiz va familiyangizni kiriting");
-            var creatorUser = await handle.NewTextMessage(updateInfo);
+            var creatorUser = await handle.NewTextMessage(updateInfo, update);
             if (creatorUser == "Bekor qilish")
             {
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
@@ -119,7 +119,7 @@ namespace TestBot.Handlers
             dto.CreatorUserId = chat.Id;
 
             await _telegram.SendTextMessageAsync(chat.Id, "Testlar sonini kiriting");
-            var amountResult = await handle.NewTextMessage(updateInfo);
+            var amountResult = await handle.NewTextMessage(updateInfo, update);
             if (amountResult == "Bekor qilish")
             {
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
@@ -133,7 +133,7 @@ namespace TestBot.Handlers
             }
             dto.Amount = amount;
             await _telegram.SendTextMessageAsync(chat.Id, "\u2705Testning javoblarini kiriting\\.\n\n\u270d\ufe0fMisol uchun: \n>abcdabcdabcd\\.\\.\\.  yoki\n>1a2b3c4d5a6b7c\\.\\.\\.", parseMode:ParseMode.MarkdownV2);
-            var answers = await handle.NewTextMessage(updateInfo);
+            var answers = await handle.NewTextMessage(updateInfo, update);
             if (answers == "Bekor qilish")
             {
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
@@ -142,7 +142,7 @@ namespace TestBot.Handlers
             dto.Answers = answers;
 
             await _telegram.SendTextMessageAsync(chat.Id, "Test qachon tugashini kiriting (yil/oy/kun soat:minut)");
-            var expirationDateResult = await handle.NewTextMessage(updateInfo);
+            var expirationDateResult = await handle.NewTextMessage(updateInfo, update);
             if (expirationDateResult == "Bekor qilish")
             {
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
@@ -165,7 +165,7 @@ namespace TestBot.Handlers
             }
         }
 
-        private async Task HandleViewTests(Chat chat, UpdateInfo updateInfo)
+        private async Task HandleViewTests(Chat chat, UpdateInfo updateInfo, Update update)
         {
             var cancelButton = new[]
             {
@@ -173,7 +173,7 @@ namespace TestBot.Handlers
             };
 
             await _telegram.SendTextMessageAsync(chat.Id, "Iltimos, testning ID raqamini yozing.", replyMarkup: new ReplyKeyboardMarkup(cancelButton));
-            var testIdMessage = await handle.NewTextMessage(updateInfo);
+            var testIdMessage = await handle.NewTextMessage(updateInfo, update);
 
             if (testIdMessage is "Bekor qilish\u274c")
                 return;
@@ -194,7 +194,7 @@ namespace TestBot.Handlers
                 replyMarkup: new ReplyKeyboardRemove(), parseMode: ParseMode.MarkdownV2);
         }
 
-        private async Task HandleDeleteTest(Chat chat, UpdateInfo updateInfo)
+        private async Task HandleDeleteTest(Chat chat, UpdateInfo updateInfo, Update update)
         {
             var cancelButton = new[]
             {
@@ -202,7 +202,7 @@ namespace TestBot.Handlers
             };
 
             await _telegram.SendTextMessageAsync(chat.Id, "O'chirish uchun test ID sini kiriting", replyMarkup: new ReplyKeyboardMarkup(cancelButton));
-            var testIdMessage = await handle.NewTextMessage(updateInfo);
+            var testIdMessage = await handle.NewTextMessage(updateInfo, update);
             
             if (testIdMessage is "Bekor qilish\u274c")
                 return;

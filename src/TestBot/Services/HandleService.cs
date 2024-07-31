@@ -13,38 +13,54 @@ public class HandleService(
     Lazy<IHandler> handler,
     UserService userService,
     HandleNextUpdate handleNext,
+    CallbackService callbackService,
     IConfiguration configuration,
     IOptions<BotConfiguration> botConfiguration)
     : EasyBot(botConfiguration.Value.BotToken, configuration)
 {
     protected override async Task OnPrivateChat(Chat chat, User user, UpdateInfo updateInfo, Update update)
     {
-        var updateMessage = update.Message.Text;
-        await IsSubscribed(updateInfo, chat, user);
-        switch (updateMessage)
+        if (update.Message != null)
         {
-            case "/panel" :
-                await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
-                break;
-            case "/start":
-                _ = Task.Run(async () => await userService.AddUser(chat));
-                await handler.Value.HandleUserTask(chat, user, updateInfo, update);
-                break;	
-
-            default:
+            var updateMessage = update.Message.Text;
+            await IsSubscribed(updateInfo, chat, user);
+            switch (updateMessage)
             {
-                await handler.Value.HandleUserTask(chat, user, updateInfo, update);
-                break;	
+                case "/panel" :
+                    await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
+                    break;
+                case "/start":
+                    _ = Task.Run(async () => await userService.AddUser(chat));
+                    await handler.Value.HandleUserTask(chat, user, updateInfo, update);
+                    break;	
+
+                default:
+                {
+                    await handler.Value.HandleUserTask(chat, user, updateInfo, update);
+                    break;	
+                }
             }
         }
 
-        if (updateInfo.CallbackData == "Subscribed")
+        switch (updateInfo.CallbackData)
         {
-            var result = await CheckMember.CheckMemberAsync(Telegram ,chat, configuration);
-            if (result)
+            case null:
+                return;
+            case "Subscribed":
             {
-                ReplyCallback(updateInfo, "Muvaffaqiyatli\u2705");
-                await handler.Value.HandleUserTask(chat, user, updateInfo, update);
+                var result = await CheckMember.CheckMemberAsync(Telegram ,chat, configuration);
+                if (result)
+                {
+                    ReplyCallback(updateInfo, "Muvaffaqiyatli\u2705");
+                    await handler.Value.HandleUserTask(chat, user, updateInfo, update);
+                }
+
+                break;
+            }
+            case "GetDetails":  
+            {
+                await callbackService.HandleCallbackQueryAsync(Telegram, update.CallbackQuery);
+                return;
             }
         }
     }

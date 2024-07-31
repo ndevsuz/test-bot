@@ -40,6 +40,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 		services.AddScoped<HandleService>();
 		services.AddScoped<UserService>();
 		services.AddScoped<AdminService>();
+		services.AddScoped<CallbackService>();
 		
 		services.AddTransient<Lazy<HandleAdmin>>(sp => new Lazy<HandleAdmin>(() => sp.GetRequiredService<HandleAdmin>()));
 		services.AddTransient<Lazy<HandleUser>>(sp => new Lazy<HandleUser>(() => sp.GetRequiredService<HandleUser>()));
