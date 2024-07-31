@@ -10,6 +10,7 @@ namespace TestBot.EasyBotFramework
     public class UpdateInfo : IGetNext
     {
         public UpdateKind UpdateKind;
+        public CallbackQuery CallbackQuery;
         public Message Message;
         public string CallbackData;
         public Update Update;

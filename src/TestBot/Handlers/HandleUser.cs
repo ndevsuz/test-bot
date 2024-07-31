@@ -21,7 +21,7 @@ public class HandleUser(HandleNextUpdate handle,
 {
     private readonly ITelegramBotClient _telegram = new TelegramBotClient(botConfiguration.Value.BotToken);
 
-    public async Task Handle(Chat chat, User user, UpdateInfo update)
+    public async Task Handle(Chat chat, User user, UpdateInfo updateInfo, Update update)
     {
         while(true) 
         {
@@ -32,21 +32,21 @@ public class HandleUser(HandleNextUpdate handle,
             
             await _telegram.SendTextMessageAsync(chat.Id, "Bosh menu\ud83c\udfe0:", replyMarkup: new ReplyKeyboardMarkup(buttons) { ResizeKeyboard = true } );
 
-            var userResponse = await handle.NewTextMessage(update);
+            var userResponse = await handle.NewTextMessage(updateInfo);
 
             switch (userResponse)
             {
                 case "Javobni tekshirish\ud83d\udd0d:":
-                    await HandleExam(chat, update);
+                    await HandleExam(chat, updateInfo);
                     break;
                 case "/panel":
-                    await handler.Value.HandleAdminTask(chat, user, update);
+                    await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
                     return;
             }
         }
     }
 
-    private async Task HandleExam(Chat chat, UpdateInfo update)
+    private async Task HandleExam(Chat chat, UpdateInfo updateInfo)
     {
         var cancelButton = new[]
         {
@@ -54,7 +54,7 @@ public class HandleUser(HandleNextUpdate handle,
         };
 
         await _telegram.SendTextMessageAsync(chat.Id, "Ism familiyangizni kirting: ", replyMarkup: new ReplyKeyboardMarkup(cancelButton));
-        var userName = await handle.NewTextMessage(update);
+        var userName = await handle.NewTextMessage(updateInfo);
         if (userName is "Bekor qilish\u274c")
         {
             await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.", replyMarkup: new ReplyKeyboardRemove());
@@ -67,7 +67,7 @@ public class HandleUser(HandleNextUpdate handle,
             parseMode: ParseMode.MarkdownV2);        
         while (true)
         {
-            var testMessage = await handle.NewTextMessage(update);
+            var testMessage = await handle.NewTextMessage(updateInfo);
             if (testMessage is "Bekor qilish\u274c")
             {
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.", replyMarkup: new ReplyKeyboardRemove());
@@ -108,7 +108,18 @@ public class HandleUser(HandleNextUpdate handle,
         var correctAnswers = test.Answers;
         var (percentage, correctCount, incorrectCount) = CalculateCorrectAnswerPercentage(userAnswers, correctAnswers);
 
-        await _telegram.SendTextMessageAsync(chat.Id, $"\ud83d\udc64Foydalanuvchi: {userName}\n\n \u270d\ud83c\udfffMuallif: {test.CreatorUser}\n \ud83d\udcd6Jami savollar: {test.Amount}\n \u2705Tog'ri javoblar: {correctCount}\n \ud83d\udd0dFoyiz: {percentage}");
+        string message = $@"👤 *Foydalanuvchi:* [{EscapeMarkdown(userName)}](tg://user?id={chat.Id})
+📝 *Testning nomi:* {EscapeMarkdown(test.Name)}
+✍️ *Muallif:* {EscapeMarkdown(test.CreatorUser)}
+🔢 *Jami savollar:* {test.Amount}
+✅ *Tog'ri javoblar:* {correctCount}
+📊 *Foyiz:* {percentage}%";
+
+        await _telegram.SendTextMessageAsync(
+            chat.Id,
+            message,
+            parseMode: ParseMode.MarkdownV2
+        );
 
         var answers = new Answer()
         {
@@ -120,7 +131,21 @@ public class HandleUser(HandleNextUpdate handle,
 
         await answerRepository.AddAsync(answers);
         await answerRepository.SaveAsync();
+        
+        await SendResultToCreatorUserAsync(chat, updateInfo, userName,test, correctCount, percentage);
+
+        await Task.Delay(1);
     }
+
+    private static string EscapeMarkdown(string text)
+    {
+        return text?.Replace("_", "\\_").Replace("*", "\\*").Replace("[", "\\[").Replace("]", "\\]")
+            .Replace("(", "\\(").Replace(")", "\\)").Replace("~", "\\~").Replace("`", "\\`")
+            .Replace(">", "\\>").Replace("#", "\\#").Replace("+", "\\+").Replace("-", "\\-")
+            .Replace("=", "\\=").Replace("|", "\\|").Replace("{", "\\{").Replace("}", "\\}")
+            .Replace(".", "\\.").Replace("!", "\\!") ?? "";
+    }
+
 
     private (double percentage, int correctCount, int incorrectCount) CalculateCorrectAnswerPercentage(string userAnswers, string correctAnswers)
     {
@@ -199,4 +224,25 @@ public class HandleUser(HandleNextUpdate handle,
 
         return dictionary;
     }
+
+    private async Task SendResultToCreatorUserAsync(Chat chat, UpdateInfo updateInfo, string userName, Test test, int correctCount, double percentage)
+        {
+        string message = $@"*🔔Sizning testingizga javob berildi!* 
+
+
+👤 *Foydalanuvchi:* [{EscapeMarkdown(userName)}](tg://user?id={chat.Id})
+📝 *Testning nomi:* {EscapeMarkdown(test.Name)}
+✍️ *Muallif:* {EscapeMarkdown(test.CreatorUser)}
+🔢 *Jami savollar:* {test.Amount}
+✅ *Tog'ri javoblar:* {correctCount}
+📊 *Foyiz:* {percentage}%";
+
+        var inlineButton = new InlineKeyboardMarkup(new InlineKeyboardButton[]
+        {
+            new("Batafsil📊") { CallbackData = "GetDetails" },
+        });
+
+        await _telegram.SendTextMessageAsync(test.CreatorUserId,
+        message, replyMarkup: inlineButton, parseMode: ParseMode.MarkdownV2);
+        }
 } 

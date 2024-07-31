@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types;
 using TestBot.EasyBotFramework;
 using TestBot.Handlers;
@@ -7,13 +8,13 @@ namespace TestBot.Helpers;
 
 public class Handler(Lazy<HandleAdmin> handleAdmin, Lazy<HandleUser> handleUser) : IHandler
 {
-    public async Task HandleAdminTask(Chat chat, User user, UpdateInfo update)
+    public async Task HandleAdminTask(Chat chat, User user, UpdateInfo updateInfo, Update update)
     {
-        await handleAdmin.Value.Handle(chat, user, update);
+        await handleAdmin.Value.Handle(chat, user, updateInfo, update);
     }
 
-    public async Task HandleUserTask(Chat chat, User user, UpdateInfo update)
+    public async Task HandleUserTask(Chat chat, User user, UpdateInfo updateInfo, Update update)
     {
-        await handleUser.Value.Handle(chat, user, update);
+        await handleUser.Value.Handle(chat, user, updateInfo, update);
     }
 }

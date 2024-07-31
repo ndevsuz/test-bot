@@ -1,12 +1,14 @@
+using AnswerBot.Repositories;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TestBot.EasyBotFramework;
+using TestBot.Services;
 
 namespace TestBot.Handlers;
 
-public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, CancellationTokenSource cancel)
+public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, CallbackService callbackService, CancellationTokenSource cancel)
 {
     private readonly ITelegramBotClient _telegram = new TelegramBotClient(botConfiguration.Value.BotToken);
     public async Task<string?> NewTextMessage(UpdateInfo update, CancellationToken ct = default)
@@ -25,8 +27,7 @@ public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, Cance
                     when update.MsgCategory is MsgCategory.Text or MsgCategory.MediaOrDoc or MsgCategory.StickerOrDice:
                     return update.MsgCategory; // NewMessage only returns for messages from these 3 categories
                 case UpdateKind.CallbackQuery:
-                    _ = _telegram.AnswerCallbackQueryAsync(update.Update.CallbackQuery?.Id, null, cancellationToken: ct);
-                    continue;
+                    
                 case UpdateKind.OtherUpdate
                     when update.Update.MyChatMember is ChatMemberUpdated
                         { NewChatMember.Status: ChatMemberStatus.Left or ChatMemberStatus.Kicked }:
@@ -64,5 +65,4 @@ public class HandleNextUpdate(IOptions<BotConfiguration> botConfiguration, Cance
         var nextEvent = await NextEvent(update, ct);
         return update.CallbackData;
     }
-
 }

@@ -47,6 +47,12 @@ public class AnswerRepository : IAnswerRepository
     public async Task<Answer> SelectAsync(Expression<Func<Answer, bool>> expression, string[] includes = null)
         => await this.SelectAll(expression, includes).FirstOrDefaultAsync();
 
+    public async Task<List<string>> SelectAnswersAsync(Expression<Func<Answer, bool>> expression)
+    {
+        return await SelectAll(expression)
+            .Select(a => a.Answers)
+            .ToListAsync();
+    }
     public IQueryable<Answer> SelectAll(Expression<Func<Answer, bool>> expression = null, string[] includes = null, bool isTracking = true)
     {
         var query = expression is null ? isTracking ? table : table.AsNoTracking()

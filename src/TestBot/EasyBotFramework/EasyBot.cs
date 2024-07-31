@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,7 +17,7 @@ namespace TestBot.EasyBotFramework
 		private readonly CancellationTokenSource _cancel = new();
 		private readonly Dictionary<long, TaskInfo> _tasks = new();
 
-		protected virtual Task OnPrivateChat(Chat chat, User user, UpdateInfo update) => Task.CompletedTask;
+		protected virtual Task OnPrivateChat(Chat chat, User user, UpdateInfo updateInfo, Update update) => Task.CompletedTask;
 		protected virtual Task OnGroupChat(Chat chat, UpdateInfo update) => Task.CompletedTask;
 		protected virtual Task OnChannel(Chat channel, UpdateInfo update) => Task.CompletedTask;
 		protected virtual Task OnOtherEvents(UpdateInfo update) => Task.CompletedTask;
@@ -94,14 +95,14 @@ namespace TestBot.EasyBotFramework
 					taskInfo.Semaphore.Release();
 					return;
 				}
-			RunTask(taskInfo, updateInfo, chat);
+			RunTask(taskInfo, updateInfo, chat, update);
 		}
 
-		private void RunTask(TaskInfo taskInfo, UpdateInfo updateInfo, Chat chat)
+		private void RunTask(TaskInfo taskInfo, UpdateInfo updateInfo, Chat chat, Update update)
 		{
 			Func<Task> taskStarter = (chat?.Type) switch
 			{
-				ChatType.Private => () => OnPrivateChat(chat, updateInfo.Message?.From, updateInfo),
+				ChatType.Private => () => OnPrivateChat(chat, updateInfo.Message?.From, updateInfo, update),
 				ChatType.Group or ChatType.Supergroup => () => OnGroupChat(chat, updateInfo),
 				ChatType.Channel => () => OnChannel(chat, updateInfo),
 				_ => () => OnOtherEvents(updateInfo),
@@ -115,7 +116,7 @@ namespace TestBot.EasyBotFramework
 						return;
 					}
 				var newUpdate = await ((IGetNext)updateInfo).NextUpdate(_cancel.Token);
-				RunTask(taskInfo, newUpdate, chat);
+				RunTask(taskInfo, newUpdate, chat, update);
 			});
 		}
 		

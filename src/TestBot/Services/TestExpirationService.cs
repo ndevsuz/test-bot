@@ -49,7 +49,7 @@ protected override async Task ExecuteAsync(CancellationToken stoppingToken)
                 {
                     var answer = topAnswers[i];
                     messageBuilder.AppendLine(places[i]);
-                    messageBuilder.AppendLine($"👤 Ismi: {EscapeMarkdown(answer.UserName)}");
+                    messageBuilder.AppendLine($"👤 Ismi: [{{EscapeMarkdown(answer.UserName)}}](tg://user?id={answer.UserId})");
                     messageBuilder.AppendLine($"📊 Foiz: {answer.Percentage}%");
                     if (i < topAnswers.Count - 1) messageBuilder.AppendLine();
                 }
