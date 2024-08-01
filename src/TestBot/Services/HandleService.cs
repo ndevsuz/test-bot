@@ -82,7 +82,7 @@ public class HandleService(
                 "Botdan foydalanish uchun, pasdagi tugmani bosib kanalga obuna bo'ling, va Tekshirish ni bosing.",
                 replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[]
                 {
-                    new("Obuna bo'lish") { Url = "https://t.me/dotnetsharpist" },
+                    new("Obuna bo'lish") { Url = "https://t.me/kelajakkabirqadam_1" },
                     new("Tekshirish✅") { CallbackData = "Subscribed" }
                 }));
 
