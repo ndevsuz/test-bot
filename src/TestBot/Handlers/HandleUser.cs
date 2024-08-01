@@ -95,7 +95,6 @@ public class HandleUser(
 
             userAnswers = testMessage;
             break;
-
         }
 
 
@@ -120,7 +119,7 @@ public class HandleUser(
 ✍️ *Muallif:* {EscapeMarkdown(test.CreatorUser)}
 🔢 *Jami savollar:* {test.Amount}
 ✅ *Tog'ri javoblar:* {correctCount}
-📊 *Foyiz:* {percentage}%";
+📊 *Foyiz:* {(int)percentage}%";
 
         await _telegram.SendTextMessageAsync(
             chat.Id,
@@ -136,10 +135,9 @@ public class HandleUser(
             UserName = chat.FirstName
         };
 
-        await answerRepository.AddAsync(answers);
-        await answerRepository.SaveAsync();
+            var answer = await answerRepository.AddAsync(answers);
 
-        await SendResultToCreatorUserAsync(chat, updateInfo, userName, test, correctCount, percentage);
+        await SendResultToCreatorUserAsync(chat, updateInfo, userName, test, correctCount, percentage, answer.Id);
     }
     
 
@@ -224,8 +222,10 @@ public class HandleUser(
     }
 
     private async Task SendResultToCreatorUserAsync(Chat chat, UpdateInfo updateInfo, string userName, Test test,
-        int correctCount, double percentage)
+        int correctCount, double percentage, long answerId)
     {
+        //
+
         string message = $@"*🔔Sizning testingizga javob berildi\!*
 
 

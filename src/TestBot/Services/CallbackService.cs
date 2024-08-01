@@ -19,7 +19,7 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
         // Parse the original message to extract necessary information
         var originalMessage = callbackQuery.Message.Text;
         var testId = ExtractTestId(originalMessage);
-        var answerId = ExtractTestId()
+        var answerId = ExtractAnswerId(originalMessage);
 
         var answers = await answerRepository.SelectAsync(a => a.Id == answerId);
         var test = await testRepository.SelectAsync(t => t.Id == testId);
@@ -40,21 +40,22 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
         await botClient.AnswerCallbackQueryAsync(callbackQuery.Id);
     }
     
-    private string BuildDetailedResultsMessage(string originalMessage, Answer answers, string correctAnswers)
+    private string BuildDetailedResultsMessage(string originalMessage, Answer answer, string correctAnswers)
     {
         var sb = new StringBuilder(EscapeMarkdown(originalMessage));
         sb.AppendLine("\n\n*Batafsil ma'lumotlar:*");
 
-        var userAnswers = answers.Answers.Split(',');
-        var correctAnswersList = correctAnswers.Split(',');
+        var userAnswers = answer.Answers.ToCharArray();
+        var correctAnswersList = correctAnswers.ToCharArray();
 
         for (int i = 0; i < userAnswers.Length; i++)
         {
-            bool isCorrect = i < correctAnswersList.Length && userAnswers[i].Trim().Equals(correctAnswersList[i].Trim(), StringComparison.OrdinalIgnoreCase);
+            bool isCorrect = i < correctAnswersList.Length && 
+                             char.ToLower(userAnswers[i]) == char.ToLower(correctAnswersList[i]);
         
-            sb.AppendLine($"{i + 1}\\. {EscapeMarkdown(userAnswers[i].Trim())} " + 
+            sb.AppendLine($"{i + 1}\\. {EscapeMarkdown(userAnswers[i].ToString())} " + 
                           $"{(isCorrect ? "✅" : "❌")} " +
-                          $"{(isCorrect ? "" : $"\\(To'g'ri javob: {EscapeMarkdown(correctAnswersList[i].Trim())}\\)")}");
+                          $"{(isCorrect ? "" : $"\\(To'g'ri javob: {EscapeMarkdown(correctAnswersList[i].ToString())}\\)")}");
         }
 
         return sb.ToString();
@@ -84,11 +85,11 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
     private int ExtractTestId(string message)
     {
         var idLine = message.Split('\n')
-            .FirstOrDefault(line => line.StartsWith("🆔 Test ID"));
+            .FirstOrDefault(line => line.StartsWith("\ud83c\udd94 Test ID "));
 
         if (idLine != null)
         {
-            var idString = idLine.Substring("🆔 ID ".Length).Trim();
+            var idString = idLine.Substring("\ud83c\udd94 Test ID ".Length).Trim();
         
             // Try to parse the ID as an integer
             if (int.TryParse(idString, out int testId))
@@ -108,7 +109,7 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
 
         if (idLine != null)
         {
-            var idString = idLine.Substring("🆔 ID ".Length).Trim();
+            var idString = idLine.Substring("🆔 Javobning IDsi ".Length).Trim();
         
             // Try to parse the ID as an integer
             if (int.TryParse(idString, out int testId))

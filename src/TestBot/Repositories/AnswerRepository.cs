@@ -20,7 +20,7 @@ public class AnswerRepository : IAnswerRepository
     public async Task<Answer> AddAsync(Answer entity)
     {
         await table.AddAsync(entity);
-
+        await dbContext.SaveChangesAsync();
         return entity;
     }
 
