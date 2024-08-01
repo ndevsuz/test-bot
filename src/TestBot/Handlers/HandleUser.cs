@@ -130,7 +130,7 @@ public class HandleUser(
 
         var answers = new Answer()
         {
-            Answers = string.Join("", CreateDictionaryFromInput(userAnswers).Values),
+            Answers = ExtractAnswers(userAnswers),
             TestId = testId,
             UserId = chat.Id,
             UserName = chat.FirstName
@@ -141,16 +141,7 @@ public class HandleUser(
 
         await SendResultToCreatorUserAsync(chat, updateInfo, userName, test, correctCount, percentage);
     }
-
-    private static string EscapeMarkdown(string text)
-    {
-        return text?.Replace("_", "\\_").Replace("*", "\\*").Replace("[", "\\[").Replace("]", "\\]")
-            .Replace("(", "\\(").Replace(")", "\\)").Replace("~", "\\~").Replace("`", "\\`")
-            .Replace(">", "\\>").Replace("#", "\\#").Replace("+", "\\+").Replace("-", "\\-")
-            .Replace("=", "\\=").Replace("|", "\\|").Replace("{", "\\{").Replace("}", "\\}")
-            .Replace(".", "\\.").Replace("!", "\\!") ?? "";
-    }
-
+    
 
     private (double percentage, int correctCount, int incorrectCount) CalculateCorrectAnswerPercentage(
         string userAnswers, string correctAnswers)
@@ -236,13 +227,16 @@ public class HandleUser(
         int correctCount, double percentage)
     {
         string message = $@"*🔔Sizning testingizga javob berildi\!*
-🆔 ID {test.Id}
-👤 *Foydalanuvchi:* [{EscapeMarkdown(userName)}](tg://user?id={chat.Id})
+
+
+🆔 *Test ID* {EscapeMarkdown(test.Id.ToString())}
+🆔 *Javobning IDsi* {EscapeMarkdown(answerId.ToString())}
+👤 *Foydalanuvchi:* [{EscapeMarkdown(userName)}](tg://user?id={EscapeMarkdown(chat.Id.ToString())})
 📝 *Testning nomi:* {EscapeMarkdown(test.Name)}
 ✍️ *Muallif:* {EscapeMarkdown(test.CreatorUser)}
-🔢 *Jami savollar:* {test.Amount}
-✅ *Tog'ri javoblar:* {correctCount}
-📊 *Foyiz:* {percentage:F2}\\%";
+🔢 *Jami savollar:* {EscapeMarkdown(test.Amount.ToString())}
+✅ *Tog'ri javoblar:* {EscapeMarkdown(correctCount.ToString())}
+📊 *Foyiz:* {EscapeMarkdown(percentage.ToString("F2"))}\\%";
 
         var inlineButton = new InlineKeyboardMarkup(new[]
         {
@@ -256,4 +250,48 @@ public class HandleUser(
             replyMarkup: inlineButton
         );
     }
+
+    private string EscapeMarkdown(string text)
+    {
+        return text.Replace("_", "\\_")
+            .Replace("*", "\\*")
+            .Replace("[", "\\[")
+            .Replace("]", "\\]")
+            .Replace("(", "\\(")
+            .Replace(")", "\\)")
+            .Replace("~", "\\~")
+            .Replace("`", "\\`")
+            .Replace(">", "\\>")
+            .Replace("#", "\\#")
+            .Replace("+", "\\+")
+            .Replace("-", "\\-")
+            .Replace("=", "\\=")
+            .Replace("|", "\\|")
+            .Replace("{", "\\{")
+            .Replace("}", "\\}")
+            .Replace(".", "\\.")
+            .Replace("!", "\\!")
+            .Replace(",", "\\,");
+    }
+    private string ExtractAnswers(string input)
+    {
+        // Remove any whitespace
+        input = input.Replace(" ", "");
+
+        // Check if the input contains numbers
+        bool containsNumbers = input.Any(char.IsDigit);
+
+        if (containsNumbers)
+        {
+            // If it contains numbers, extract only the letters
+            return new string(input.Where(c => char.IsLetter(c)).ToArray());
+        }
+        else
+        {
+            // If it doesn't contain numbers, return the input as is
+            return input;
+        }
+    }
+
 }
+    

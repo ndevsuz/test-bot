@@ -19,9 +19,9 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
         // Parse the original message to extract necessary information
         var originalMessage = callbackQuery.Message.Text;
         var testId = ExtractTestId(originalMessage);
+        var answerId = ExtractTestId()
 
-        // Fetch detailed answers from the database
-        var answers = await answerRepository.SelectAsync(a => a.Id == testId);
+        var answers = await answerRepository.SelectAsync(a => a.Id == answerId);
         var test = await testRepository.SelectAsync(t => t.Id == testId);
 
         // Build the detailed results message
@@ -83,13 +83,11 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
     }    
     private int ExtractTestId(string message)
     {
-        // Find the line that starts with "🆔 ID"
         var idLine = message.Split('\n')
-            .FirstOrDefault(line => line.StartsWith("🆔 ID"));
+            .FirstOrDefault(line => line.StartsWith("🆔 Test ID"));
 
         if (idLine != null)
         {
-            // Extract the number after "🆔 ID "
             var idString = idLine.Substring("🆔 ID ".Length).Trim();
         
             // Try to parse the ID as an integer
@@ -101,4 +99,26 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
 
         // Return -1 or throw an exception if ID is not found or not valid
         return -1; // Or throw new Exception("Test ID not found in the message");
-    } }
+    }
+
+    private int ExtractAnswerId(string message)
+    {
+        var idLine = message.Split('\n')
+            .FirstOrDefault(line => line.StartsWith("🆔 Javobning IDsi"));
+
+        if (idLine != null)
+        {
+            var idString = idLine.Substring("🆔 ID ".Length).Trim();
+        
+            // Try to parse the ID as an integer
+            if (int.TryParse(idString, out int testId))
+            {
+                return testId;
+            }
+        }
+
+        // Return -1 or throw an exception if ID is not found or not valid
+        return -1; // Or throw new Exception("Test ID not found in the message");
+
+    }
+}

@@ -28,7 +28,7 @@ public class AdminService(ITestRepository testRepository)
         {
             Name = dto.Name,
             Amount = dto.Amount,
-            Answers = string.Join("",CreateDictionaryFromInput(dto.Answers).Values),
+            Answers = ExtractAnswers(dto.Answers),
             CreatedAt = DateTime.UtcNow.AddHours(5),
             CreatorUser = dto.CreatorUser,
             CreatorUserId = dto.CreatorUserId,
@@ -126,4 +126,23 @@ public class AdminService(ITestRepository testRepository)
         return text;
     }
 
+    private string ExtractAnswers(string input)
+    {
+        // Remove any whitespace
+        input = input.Replace(" ", "");
+
+        // Check if the input contains numbers
+        bool containsNumbers = input.Any(char.IsDigit);
+
+        if (containsNumbers)
+        {
+            // If it contains numbers, extract only the letters
+            return new string(input.Where(c => char.IsLetter(c)).ToArray());
+        }
+        else
+        {
+            // If it doesn't contain numbers, return the input as is
+            return input;
+        }
+    }
 }
