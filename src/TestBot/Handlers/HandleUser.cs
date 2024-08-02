@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using AnswerBot.Repositories;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
@@ -18,6 +19,7 @@ public class HandleUser(
     Lazy<IHandler> handler,
     IAnswerRepository answerRepository,
     AdminService adminService,
+    IConfiguration configuration,
     IOptions<BotConfiguration> botConfiguration)
 {
     private readonly ITelegramBotClient _telegram = new TelegramBotClient(botConfiguration.Value.BotToken);
@@ -26,6 +28,7 @@ public class HandleUser(
     {
         while (true)
         {
+            await IsSubscribed(updateInfo, chat, user);
             var buttons = new KeyboardButton[][]
             {
                 ["Javobni tekshirish\ud83d\udd0d:"],
@@ -291,6 +294,46 @@ public class HandleUser(
             // If it doesn't contain numbers, return the input as is
             return input;
         }
+    }
+
+    private async Task IsSubscribed(UpdateInfo updateInfo, Chat chat, User user)
+    {
+        while (true)
+        {
+            var isMember = await CheckMember.CheckMemberAsync(_telegram, chat, configuration);
+            if (isMember)
+                return;
+
+            var message = await _telegram.SendTextMessageAsync(chat.Id,
+                "Botdan foydalanish uchun, pasdagi tugmani bosib kanalga obuna bo'ling, va Tekshirish ni bosing.",
+                replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton[]
+                {
+                    new("Obuna bo'lish") { Url = "https://t.me/kelajakkabirqadam_1" },
+                    new("Tekshirish✅") { CallbackData = "Subscribed" }
+                }));
+
+            var callbackResult = await handle.ButtonClicked(updateInfo, updateInfo.Message);
+            if (callbackResult == "Subscribed")
+            {
+                var result = await CheckMember.CheckMemberAsync(_telegram, chat, configuration);
+                if (!result)
+                {
+                    await _telegram.DeleteMessageAsync(chat.Id, message.MessageId);
+                    continue;
+                }
+
+                ReplyCallback(updateInfo, "Muvaffaqiyatli\u2705");
+                await _telegram.DeleteMessageAsync(chat.Id, message.MessageId);
+                return;
+            }
+        }
+    }
+
+    public void ReplyCallback(UpdateInfo update, string text = null, bool showAlert = false, string url = null)
+    {
+        if (update.Update.Type != UpdateType.CallbackQuery)
+            throw new InvalidOperationException("This method can be called only for CallbackQue	ry updates");
+        _ = _telegram.AnswerCallbackQueryAsync(update.Update.CallbackQuery.Id, text, showAlert, url);
     }
 
 }

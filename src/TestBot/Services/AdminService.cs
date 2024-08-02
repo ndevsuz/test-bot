@@ -42,9 +42,9 @@ public class AdminService(ITestRepository testRepository)
         return $"Testning ID raqami : {newTest.Id}";
     }
 
-    public async Task<string?> GetById(long id)
+    public async Task<string?> GetById(long id, long userId)
     {
-        var result = await testRepository.SelectAsync(t => t.Id == id);
+        var result = await testRepository.SelectAsync(t => t.Id == id && t.CreatorUserId == userId);
         if (result == null)
             return null;
         return await Task.FromResult(ConvertTestsToStrings(result));
