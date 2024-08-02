@@ -104,14 +104,14 @@ public class AdminService(ITestRepository testRepository)
     private static string ConvertTestsToStrings(Test test)
     {
         return $@"
-    🆔 *ID :* {EscapeMarkdown(test.Id.ToString())}
-        📝 *Test nomi :* {EscapeMarkdown(test.Name)}
-        👤 *Tuzuvchi :* {EscapeMarkdown(test.CreatorUser)}
-        🔢 *Testlar soni:* {test.Amount}
-        ✅ *Javoblar :* {EscapeMarkdown(test.Answers)}
-        🕒 *Yaratilgan vaqti:* {EscapeMarkdown(test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan")}
-        ⏳ *Yakunlanadigan vaqti :* {(EscapeMarkdown(test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"))}
-        ";
+ 🆔 *ID :* {EscapeMarkdown(test.Id.ToString())}
+📝 *Test nomi :* {EscapeMarkdown(test.Name)}
+👤 *Tuzuvchi :* [{EscapeMarkdown(test.CreatorUser)}](tg://user?id={test.CreatorUserId})  
+🔢 *Testlar soni:* {test.Amount}
+✅ *Javoblar :* {EscapeMarkdown(test.Answers)}
+🕒 *Yaratilgan vaqti:* {EscapeMarkdown(test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan")}
+⏳ *Yakunlanadigan vaqti :* {(EscapeMarkdown(test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"))}
+";
     }
     private static string EscapeMarkdown(string text)
     {

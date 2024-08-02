@@ -32,6 +32,7 @@ public class HandleUser(
             var buttons = new KeyboardButton[][]
             {
                 ["Javobni tekshirish\ud83d\udd0d:"],
+                ["Panelga o'tish\u2699\ufe0f"]
             };
 
             await _telegram.SendTextMessageAsync(chat.Id, "Bosh menu\ud83c\udfe0:",
@@ -43,6 +44,9 @@ public class HandleUser(
             {
                 case "Javobni tekshirish\ud83d\udd0d:":
                     await HandleExam(chat, updateInfo, update);
+                    break;
+                case "Panelga o'tish\u2699\ufe0f":
+                    await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
                     break;
                 case "/panel":
                     await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
