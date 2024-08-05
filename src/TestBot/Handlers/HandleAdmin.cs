@@ -164,7 +164,7 @@ namespace TestBot.Handlers
             try
             {
                 var result = await adminService.HandleNewTest(dto);
-                await _telegram.SendTextMessageAsync(chat.Id, result);
+                await _telegram.SendTextMessageAsync(chat.Id, result, parseMode:ParseMode.MarkdownV2);
             }
             catch (Exception ex)
             {

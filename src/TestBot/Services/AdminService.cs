@@ -39,7 +39,24 @@ public class AdminService(ITestRepository testRepository)
         await testRepository.AddAsync(newTest);
         await testRepository.SaveAsync();
 
-        return $"Testning ID raqami : {newTest.Id}";
+        string rewardStatus = newTest.IsRewarded ? "Ha" : "Yo'q";
+
+        string message = $@"✅ Test muvaffaqiyatli yaratildi\!
+
+📋 *Test ma'lumotlari:*
+🆔 *Test ID:* {EscapeMarkdown(newTest.Id.ToString())}
+📝 *Nomi:* {EscapeMarkdown(newTest.Name)}
+🔢 *Savollar soni:* {EscapeMarkdown(newTest.Amount.ToString())}
+👤 *Yaratuvchi:* {EscapeMarkdown(newTest.CreatorUser)}
+🕒 *Yaratilgan vaqt:* {EscapeMarkdown(newTest.CreatedAt.ToString())}
+🏆 *Sertefikatli:* {EscapeMarkdown(rewardStatus)}
+⏳ *Amal qilish muddati:* {EscapeMarkdown(dto.ExpirationDate.ToString() ?? string.Empty)}
+
+Test ishlashga tayyor\!
+
+Omad\!";
+
+        return message;
     }
 
     public async Task<string?> GetById(long id, long userId)
