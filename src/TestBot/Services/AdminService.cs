@@ -10,7 +10,7 @@ public class AdminService(ITestRepository testRepository)
     {
         dto.Answers = dto.Answers.ToLower().Trim();
         
-        if (dto.ExpirationDate < DateTime.UtcNow.AddHours(5))
+        /*if (dto.ExpirationDate < DateTime.UtcNow.AddHours(5))
             return ("Test yankunlanadigan vaqt hozirgi vaqtdan avval bo'la olmaydi");
         
         if (dto.Answers.Any(char.IsDigit))
@@ -22,12 +22,12 @@ public class AdminService(ITestRepository testRepository)
         {
             if(dto.Answers.Length != dto.Amount)
                 return ("Javoblar soni testlar soni bilan teng bolishi kerak");
-        }
+        }*/
 
         var newTest = new Test()
         {
             Name = dto.Name,
-            Amount = dto.Amount,
+            Amount = ExtractAnswers(dto.Answers).Length,
             Answers = ExtractAnswers(dto.Answers),
             CreatedAt = DateTime.UtcNow.AddHours(5),
             CreatorUser = dto.CreatorUser,
@@ -50,7 +50,6 @@ public class AdminService(ITestRepository testRepository)
 👤 *Yaratuvchi:* {EscapeMarkdown(newTest.CreatorUser)}
 🕒 *Yaratilgan vaqt:* {EscapeMarkdown(newTest.CreatedAt.ToString())}
 🏆 *Sertefikatli:* {EscapeMarkdown(rewardStatus)}
-⏳ *Amal qilish muddati:* {EscapeMarkdown(dto.ExpirationDate.ToString() ?? string.Empty)}
 
 Test ishlashga tayyor\!
 

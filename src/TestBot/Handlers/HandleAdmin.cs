@@ -97,74 +97,38 @@ namespace TestBot.Handlers
                     break;
             }
 
-            await _telegram.SendTextMessageAsync(chat.Id, "Testning nomini kiriting: ",
-                replyMarkup: new ReplyKeyboardMarkup(cancelButton));
-            var testName = await handle.NewTextMessage(updateInfo, update);
-            if (testName == "Bekor qilish")
+            var newTestMessage = "\u2757\ufe0fYangi test yaratish\n\n\u2705Test nomini kiritib \\* \\(yulduzcha\\) belgisini qo'yasiz va barcha kalitni kiritasiz\\.\n\n\u270d\ufe0fMisol uchun: \n>Matematika\\*abcdabcdabcd\\.\\.\\.  yoki\n>Matematika\\*1a2b3c4d5a6b7c\\.\\.\\.";
+            await _telegram.SendTextMessageAsync(chat.Id, newTestMessage,parseMode:ParseMode.MarkdownV2);
+            string[] testParts;
+            while (true)
             {
-                await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
-                return;
+                var testInfo = await handle.NewTextMessage(updateInfo, update);
+
+                if (testInfo == "Bekor qilish")
+                {
+                    await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
+                    return;
+                }
+
+                testParts = testInfo.Split('*');
+                if (testParts.Length != 2)
+                {
+                    await _telegram.SendTextMessageAsync(chat.Id,
+                        "Iltimos, to'g'ri formatda kiriting. Misol: Test nomi*1a2b3c");
+                }
+                break;
             }
 
-            dto.Name = testName;
-
-            await _telegram.SendTextMessageAsync(chat.Id, "Ismingiz va familiyangizni kiriting");
-            var creatorUser = await handle.NewTextMessage(updateInfo, update);
-            if (creatorUser == "Bekor qilish")
-            {
-                await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
-                return;
-            }
-
-            dto.CreatorUser = creatorUser;
+            dto.CreatorUser = chat.FirstName + chat.LastName;
             dto.CreatorUserId = chat.Id;
 
-            await _telegram.SendTextMessageAsync(chat.Id, "Testlar sonini kiriting");
-            var amountResult = await handle.NewTextMessage(updateInfo, update);
-            if (amountResult == "Bekor qilish")
-            {
-                await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
-                return;
-            }
+            dto.Name = testParts[0].Trim();
+            dto.Answers = testParts[1].Trim();
 
-            if (!int.TryParse(amountResult, out var amount))
-            {
-                await _telegram.SendTextMessageAsync(chat.Id, "Iltimos, haqiqiy son kiriting.");
-                return;
-            }
-
-            dto.Amount = amount;
-            await _telegram.SendTextMessageAsync(chat.Id,
-                "\u2705Testning javoblarini kiriting\\.\n\n\u270d\ufe0fMisol uchun: \n>abcdabcdabcd\\.\\.\\.  yoki\n>1a2b3c4d5a6b7c\\.\\.\\.",
-                parseMode: ParseMode.MarkdownV2);
-            var answers = await handle.NewTextMessage(updateInfo, update);
-            if (answers == "Bekor qilish")
-            {
-                await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
-                return;
-            }
-
-            dto.Answers = answers;
-
-            await _telegram.SendTextMessageAsync(chat.Id, "Test qachon tugashini kiriting (yil/oy/kun soat:minut)");
-            var expirationDateResult = await handle.NewTextMessage(updateInfo, update);
-            if (expirationDateResult == "Bekor qilish")
-            {
-                await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.");
-                return;
-            }
-
-            if (!DateTime.TryParse(expirationDateResult, out var expirationDate))
-            {
-                await _telegram.SendTextMessageAsync(chat.Id, "Iltimos, haqiqiy sana kiriting.");
-                return;
-            }
-
-            dto.ExpirationDate = expirationDate.AddHours(5).ToUniversalTime();
             try
             {
                 var result = await adminService.HandleNewTest(dto);
-                await _telegram.SendTextMessageAsync(chat.Id, result, parseMode:ParseMode.MarkdownV2);
+                await _telegram.SendTextMessageAsync(chat.Id, result, parseMode: ParseMode.MarkdownV2);
             }
             catch (Exception ex)
             {
@@ -276,6 +240,19 @@ namespace TestBot.Handlers
             if (update.Update.Type != UpdateType.CallbackQuery)
                 throw new InvalidOperationException("This method can be called only for CallbackQue	ry updates");
             _ = _telegram.AnswerCallbackQueryAsync(update.Update.CallbackQuery.Id, text, showAlert, url);
+        }
+
+        private static string EscapeMarkdown(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            string[] specialCharacters = new[] { "_", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!", "," };
+            foreach (var character in specialCharacters)
+            {
+                text = text.Replace(character, "\\" + character);
+            }
+            return text;
         }
 
     }
