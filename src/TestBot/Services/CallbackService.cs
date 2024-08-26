@@ -1,5 +1,6 @@
 using System.Text;
 using AnswerBot.Repositories;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,46 +17,54 @@ public class CallbackService(IAnswerRepository answerRepository, ITestRepository
     }
     private async Task SendDetailedResultsAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
-        // Parse the original message to extract necessary information
-        var originalMessage = callbackQuery.Message.Text;
-        var testId = ExtractTestId(originalMessage);
-        var answerId = ExtractAnswerId(originalMessage);
+        var originalMessage = callbackQuery.Message?.Text;
+        if (originalMessage != null)
+        {
+            var testId = ExtractTestId(originalMessage);
+            var answerId = ExtractAnswerId(originalMessage);
 
-        var answers = await answerRepository.SelectAsync(a => a.Id == answerId);
-        var test = await testRepository.SelectAsync(t => t.Id == testId);
+            var answer = await answerRepository.SelectAsync(a => a.Id == answerId);
+            var test = await testRepository.SelectAsync(t => t.Id == testId);
 
-        // Build the detailed results message
-        var detailedMessage = BuildDetailedResultsMessage(originalMessage, answers, test.Answers);
+            // Deserialize the answers from JSON
+            var userAnswersDict = JsonConvert.DeserializeObject<Dictionary<int, char>>(answer.Answers);
+            var correctAnswersDict = test.Answers;
 
-        // Edit the original message with the detailed results
-        await botClient.EditMessageTextAsync(
-            chatId: callbackQuery.Message.Chat.Id,
-            messageId: callbackQuery.Message.MessageId,
-            text: detailedMessage,
-            parseMode: ParseMode.MarkdownV2,
-            replyMarkup: null // Remove the inline keyboard
-        );
+            var detailedMessage = BuildDetailedResultsMessage(originalMessage, userAnswersDict, correctAnswersDict);
 
-        // Answer the callback query to remove the loading indicator
+            // Edit the original message with the detailed results
+            await botClient.EditMessageTextAsync(
+                chatId: callbackQuery.Message.Chat.Id,
+                messageId: callbackQuery.Message.MessageId,
+                text: detailedMessage,
+                parseMode: ParseMode.MarkdownV2,
+                replyMarkup: null // Remove the inline keyboard
+            );
+        }
+        
         await botClient.AnswerCallbackQueryAsync(callbackQuery.Id);
     }
-    
-    private string BuildDetailedResultsMessage(string originalMessage, Answer answer, string correctAnswers)
+
+    private string BuildDetailedResultsMessage(string originalMessage, Dictionary<int, char> userAnswers, Dictionary<int, string> correctAnswers)
     {
         var sb = new StringBuilder(EscapeMarkdown(originalMessage));
         sb.AppendLine("\n\n*Batafsil ma'lumotlar:*");
 
-        var userAnswers = answer.Answers.ToCharArray();
-        var correctAnswersList = correctAnswers.ToCharArray();
-
-        for (int i = 0; i < userAnswers.Length; i++)
+        foreach (var correctAnswer in correctAnswers)
         {
-            bool isCorrect = i < correctAnswersList.Length && 
-                             char.ToLower(userAnswers[i]) == char.ToLower(correctAnswersList[i]);
-        
-            sb.AppendLine($"{i + 1}\\. {EscapeMarkdown(userAnswers[i].ToString())} " + 
-                          $"{(isCorrect ? "✅" : "❌")} " +
-                          $"{(isCorrect ? "" : $"\\(To'g'ri javob: {EscapeMarkdown(correctAnswersList[i].ToString())}\\)")}");
+            if (userAnswers.TryGetValue(correctAnswer.Key, out var userAnswer))
+            {
+                bool isCorrect = userAnswer.ToString().Equals(correctAnswer.Value, StringComparison.OrdinalIgnoreCase);
+
+                sb.AppendLine($"{correctAnswer.Key}\\. {EscapeMarkdown(userAnswer.ToString())} " +
+                              $"{(isCorrect ? "✅" : "❌")} " +
+                              $"{(isCorrect ? "" : $"\\(To'g'ri javob: {EscapeMarkdown(correctAnswer.Value)}\\)")}");
+            }
+            else
+            {
+                sb.AppendLine($"{correctAnswer.Key}\\. ❓ Hech qanday javob berilmadi " +
+                              $"\\(To'g'ri javob: {EscapeMarkdown(correctAnswer.Value)}\\)");
+            }
         }
 
         return sb.ToString();

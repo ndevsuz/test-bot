@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using TestBot.Models;
 using TestBot.Repositories;
 using TestBot.VeiwModels;
@@ -10,24 +12,10 @@ public class AdminService(ITestRepository testRepository)
     {
         dto.Answers = dto.Answers.ToLower().Trim();
         
-        /*if (dto.ExpirationDate < DateTime.UtcNow.AddHours(5))
-            return ("Test yankunlanadigan vaqt hozirgi vaqtdan avval bo'la olmaydi");
-        
-        if (dto.Answers.Any(char.IsDigit))
-        {
-            if (CreateDictionaryFromInput(dto.Answers).Count != dto.Amount)
-                return ("Javoblar soni testlar soni bilan teng bolishi kerak");
-        }
-        else
-        {
-            if(dto.Answers.Length != dto.Amount)
-                return ("Javoblar soni testlar soni bilan teng bolishi kerak");
-        }*/
-
         var newTest = new Test()
         {
             Name = dto.Name,
-            Amount = ExtractAnswers(dto.Answers).Length,
+            Amount = ExtractAnswers(dto.Answers).Count,
             Answers = ExtractAnswers(dto.Answers),
             CreatedAt = DateTime.UtcNow.AddHours(5),
             CreatorUser = dto.CreatorUser,
@@ -119,15 +107,29 @@ Omad\!";
 
     private static string ConvertTestsToStrings(Test test)
     {
-        return $@"
- 🆔 *ID :* {EscapeMarkdown(test.Id.ToString())}
-📝 *Test nomi :* {EscapeMarkdown(test.Name)}
-👤 *Tuzuvchi :* [{EscapeMarkdown(test.CreatorUser)}](tg://user?id={test.CreatorUserId})  
-🔢 *Testlar soni:* {test.Amount}
-✅ *Javoblar :* {EscapeMarkdown(test.Answers)}
-🕒 *Yaratilgan vaqti:* {EscapeMarkdown(test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan")}
-⏳ *Yakunlanadigan vaqti :* {(EscapeMarkdown(test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"))}
-";
+        var sb = new StringBuilder();
+        sb.AppendLine($@"🆔 *ID :* {EscapeMarkdown(test.Id.ToString())}");
+        sb.AppendLine($@"📝 *Test nomi :* {EscapeMarkdown(test.Name)}");
+        sb.AppendLine($@"👤 *Tuzuvchi :* [{EscapeMarkdown(test.CreatorUser)}](tg://user?id={test.CreatorUserId})");
+        sb.AppendLine($@"🔢 *Testlar soni:* {test.Amount}");
+
+        if (test.Answers != null && test.Answers.Count > 0)
+        {
+            sb.AppendLine("✅ *Javoblar :*");
+            foreach (var answer in test.Answers)
+            {
+                sb.AppendLine($@"{EscapeMarkdown(answer.Key.ToString())}\. {EscapeMarkdown(answer.Value)}");
+            }
+        }
+        else
+        {
+            sb.AppendLine("✅ *Javoblar :* Belgilanmagan");
+        }
+
+        sb.AppendLine($@"🕒 *Yaratilgan vaqti:* {EscapeMarkdown(test.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan")}");
+        sb.AppendLine($@"⏳ *Yakunlanadigan vaqti :* {(EscapeMarkdown(test.ExpirationDate?.ToString("dd/MM/yyyy HH:mm") ?? "Belgilanmagan"))}");
+
+        return sb.ToString();
     }
     private static string EscapeMarkdown(string text)
     {
@@ -142,23 +144,38 @@ Omad\!";
         return text;
     }
 
-    private string ExtractAnswers(string input)
+    private Dictionary<int, string> ExtractAnswers(string answers)
     {
-        // Remove any whitespace
-        input = input.Replace(" ", "");
+        var answerDict = new Dictionary<int, string>();
 
-        // Check if the input contains numbers
-        bool containsNumbers = input.Any(char.IsDigit);
+        // Check if the string contains any numbers (keys)
+        bool isKeyed = answers.Any(char.IsDigit);
 
-        if (containsNumbers)
+        if (isKeyed)
         {
-            // If it contains numbers, extract only the letters
-            return new string(input.Where(c => char.IsLetter(c)).ToArray());
+            // If the answers are keyed (e.g., "1a2b3c"), split by numbers and populate the dictionary
+            int key = 0;
+            foreach (var part in Regex.Split(answers, @"(?<=\D)(?=\d)|(?<=\d)(?=\D)"))
+            {
+                if (int.TryParse(part, out int number))
+                {
+                    key = number;
+                }
+                else
+                {
+                    answerDict[key] = part;
+                }
+            }
         }
         else
         {
-            // If it doesn't contain numbers, return the input as is
-            return input;
+            // If the answers are not keyed (e.g., "abcdabcd"), use the position as the key
+            for (int i = 0; i < answers.Length; i++)
+            {
+                answerDict[i + 1] = answers[i].ToString();
+            }
         }
+
+        return answerDict;
     }
 }

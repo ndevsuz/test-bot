@@ -110,12 +110,21 @@ namespace TestBot.Handlers
                     return;
                 }
 
+                if (string.IsNullOrWhiteSpace(testInfo))
+                {
+                    await _telegram.SendTextMessageAsync(chat.Id,
+                        "Iltimos, bo'sh qiymat kiritmang. Misol: Test nomi*1a2b3c");
+                    continue; 
+                }
+
                 testParts = testInfo.Split('*');
-                if (testParts.Length != 2)
+                if (testParts.Length != 2 || string.IsNullOrWhiteSpace(testParts[0]) || string.IsNullOrWhiteSpace(testParts[1]))
                 {
                     await _telegram.SendTextMessageAsync(chat.Id,
                         "Iltimos, to'g'ri formatda kiriting. Misol: Test nomi*1a2b3c");
+                    continue; 
                 }
+
                 break;
             }
 
@@ -124,7 +133,6 @@ namespace TestBot.Handlers
 
             dto.Name = testParts[0].Trim();
             dto.Answers = testParts[1].Trim();
-
             try
             {
                 var result = await adminService.HandleNewTest(dto);

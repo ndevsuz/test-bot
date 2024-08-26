@@ -21,6 +21,7 @@ public class TestExpirationService : BackgroundService
 
 protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 {
+    /*
     while (!stoppingToken.IsCancellationRequested)
     {
         try
@@ -68,7 +69,8 @@ protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         }
 
         await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-    }
+    */
+ //   }
 }    private static int CalculatePercentage(string correctAnswers, string userAnswers)
     {
         if (correctAnswers.Length != userAnswers.Length)

@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using AnswerBot.Repositories;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
@@ -59,11 +58,11 @@ public class HandleUser(
     {
         var cancelButton = new[]
         {
-            new KeyboardButton[] { "Bekor qilish\u274c" }
+        new KeyboardButton[] { "Bekor qilish\u274c" }
         };
 
         await _telegram.SendTextMessageAsync(chat.Id, "Ism familiyangizni kirting: ",
-            replyMarkup: new ReplyKeyboardMarkup(cancelButton));
+        replyMarkup: new ReplyKeyboardMarkup(cancelButton));
         var userName = await handle.NewTextMessage(updateInfo, update);
         if (userName is "Bekor qilish\u274c")
         {
@@ -74,8 +73,8 @@ public class HandleUser(
         string userAnswers;
         long testId = 0;
         await _telegram.SendTextMessageAsync(chat.Id,
-            "\u2705Test kodini kiritib \\* \\(yulduzcha\\) belgisini qo'yasiz va barcha kalitni kiritasiz\\.\n\n\u270d\ufe0fMisol uchun: \n>123\\*abcdabcdabcd\\.\\.\\.  yoki\n>123\\*1a2b3c4d5a6b7c\\.\\.\\.",
-            parseMode: ParseMode.MarkdownV2);
+        "\u2705Test kodini kiritib \\* \\(yulduzcha\\) belgisini qo'yasiz va barcha kalitni kiritasiz\\.\n\n\u270d\ufe0fMisol uchun: \n>123\\*abcdabcdabcd\\.\\.\\.  yoki\n>123\\*1a2b3c4d5a6b7c\\.\\.\\.",
+        parseMode: ParseMode.MarkdownV2);
         while (true)
         {
             var testMessage = await handle.NewTextMessage(updateInfo, update);
@@ -84,7 +83,6 @@ public class HandleUser(
                 await _telegram.SendTextMessageAsync(chat.Id, "Bekor qilindi.", replyMarkup: new ReplyKeyboardRemove());
                 return;
             }
-
 
             if (testMessage.Contains('*'))
             {
@@ -104,7 +102,6 @@ public class HandleUser(
             break;
         }
 
-
         var test = await adminService.GetTestById(testId);
         if (test == null)
         {
@@ -118,8 +115,14 @@ public class HandleUser(
             return;
         }
 
+        // Convert user answers to a dictionary
+        var userAnswerDict = ExtractAnswers(userAnswers);
+
+        // Get the correct answers dictionary from the test
         var correctAnswers = test.Answers;
-        var (percentage, correctCount, incorrectCount) = CalculateCorrectAnswerPercentage(userAnswers, correctAnswers);
+
+        // Calculate the percentage and counts
+        var (percentage, correctCount, incorrectCount) = CalculateCorrectAnswerPercentage(userAnswerDict, correctAnswers);
 
         string message = $@"👤 *Foydalanuvchi:* [{EscapeMarkdown(userName)}](tg://user?id={chat.Id})
 📝 *Testning nomi:* {EscapeMarkdown(test.Name)}
@@ -136,7 +139,7 @@ public class HandleUser(
 
         var answers = new Answer()
         {
-            Answers = ExtractAnswers(userAnswers),
+            AnswersDictionary = userAnswerDict,
             TestId = testId,
             UserId = chat.Id,
             UserName = chat.FirstName
@@ -149,23 +152,21 @@ public class HandleUser(
     
 
     private (double percentage, int correctCount, int incorrectCount) CalculateCorrectAnswerPercentage(
-        string userAnswers, string correctAnswers)
+        Dictionary<int, string> userAnswers, Dictionary<int, string> correctAnswers)
     {
-        var correctAnswerDict = ParseAnswers(correctAnswers);
-        var userAnswerDict = ParseAnswers(userAnswers);
-
         int correctCount = 0;
-        foreach (var userAnswer in userAnswerDict)
+
+        foreach (var userAnswer in userAnswers)
         {
-            if (correctAnswerDict.TryGetValue(userAnswer.Key, out var correctAnswer) &&
+            if (correctAnswers.TryGetValue(userAnswer.Key, out var correctAnswer) &&
                 userAnswer.Value == correctAnswer)
             {
                 correctCount++;
             }
         }
 
-        int incorrectCount = correctAnswerDict.Count - correctCount;
-        double percentage = (double)correctCount / correctAnswerDict.Count * 100;
+        int incorrectCount = correctAnswers.Count - correctCount;
+        double percentage = (double)correctCount / correctAnswers.Count * 100;
 
         return (percentage, correctCount, incorrectCount);
     }
@@ -176,7 +177,6 @@ public class HandleUser(
 
         if (answers.All(char.IsLetter))
         {
-            // If the answers are only letters (e.g., "abc"), assume sequential questions
             for (int i = 0; i < answers.Length; i++)
             {
                 answerDict[i + 1] = answers[i];
@@ -184,7 +184,6 @@ public class HandleUser(
         }
         else
         {
-            // If the answers are in the format "1a2b3c" or "1a3c"
             for (int i = 0; i < answers.Length; i += 2)
             {
                 if (i + 1 < answers.Length && char.IsDigit(answers[i]) && char.IsLetter(answers[i + 1]))
@@ -280,24 +279,39 @@ public class HandleUser(
             .Replace("!", "\\!")
             .Replace(",", "\\,");
     }
-    private string ExtractAnswers(string input)
+    private Dictionary<int, string> ExtractAnswers(string input)
     {
         // Remove any whitespace
         input = input.Replace(" ", "");
 
-        // Check if the input contains numbers
-        bool containsNumbers = input.Any(char.IsDigit);
+        // Initialize a dictionary to store the extracted answers
+        var answerDictionary = new Dictionary<int, string>();
 
-        if (containsNumbers)
+        // Initialize variables to keep track of the current key and value
+        int currentKey = 0;
+        string currentValue;
+
+        // Loop through each character in the input string
+        foreach (var c in input)
         {
-            // If it contains numbers, extract only the letters
-            return new string(input.Where(c => char.IsLetter(c)).ToArray());
+            if (char.IsDigit(c))
+            {
+                // If the current character is a digit, build the key
+                currentKey = currentKey * 10 + int.Parse(c.ToString());
+            }
+            else if (char.IsLetter(c))
+            {
+                // If the current character is a letter, it’s the answer for the current key
+                currentValue = c.ToString();
+                if (currentKey != 0) // Make sure the key is valid
+                {
+                    answerDictionary[currentKey] = currentValue;
+                    currentKey = 0; // Reset key for the next entry
+                }
+            }
         }
-        else
-        {
-            // If it doesn't contain numbers, return the input as is
-            return input;
-        }
+
+        return answerDictionary;
     }
 
     private async Task IsSubscribed(UpdateInfo updateInfo, Chat chat, User user)
