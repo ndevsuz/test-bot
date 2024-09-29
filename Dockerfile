@@ -1,13 +1,15 @@
 ﻿FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
-USER $APP_UID
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
 COPY ["src/TestBot/TestBot.csproj", "src/TestBot/"]
 RUN dotnet restore "src/TestBot/TestBot.csproj"
+
 COPY . .
+
 WORKDIR "/src/src/TestBot"
 RUN dotnet build "TestBot.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
