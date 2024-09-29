@@ -50,6 +50,7 @@ public class HandleUser(
                 case "/panel":
                     await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
                     return;
+                default: continue;
             }
         }
     }

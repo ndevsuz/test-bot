@@ -33,27 +33,35 @@ namespace TestBot.EasyBotFramework
 
 		private async Task RunAsync()
 		{
-			Console.WriteLine($"Press Escape to stop the {BotName} bot");
-			while (true)
+			try
 			{
-				try
+				Console.WriteLine($"Press Escape to stop the {BotName} bot");
+				while (true)
 				{
-					var updates = await Telegram.GetUpdatesAsync();
-					foreach (var update in updates)
-						HandleUpdate(update);
-					/*
-					if (Console.KeyAvailable)
-						if (Console.ReadKey().Key == ConsoleKey.Escape)
-							break;
-				*/
+					try
+					{
+						var updates = await Telegram.GetUpdatesAsync();
+						foreach (var update in updates)
+							HandleUpdate(update);
+						/*
+						if (Console.KeyAvailable)
+							if (Console.ReadKey().Key == ConsoleKey.Escape)
+								break;
+					*/
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine(e.Message);
+						continue;
+					}
 				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e.Message);
-					continue;
-				}
+
+				await _cancel.CancelAsync();
 			}
-			await _cancel.CancelAsync();
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}
 		}
 
 		public async Task<string> CheckWebhook(string url)

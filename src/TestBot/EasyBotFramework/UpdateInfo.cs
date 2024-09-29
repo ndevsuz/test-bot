@@ -46,11 +46,19 @@ namespace TestBot.EasyBotFramework
         }
         async Task<UpdateInfo> IGetNext.NextUpdate(CancellationToken cancel)
         {
-            await _taskInfo.Semaphore.WaitAsync(cancel);
-            UpdateInfo newUpdate;
-            lock (_taskInfo)
-                newUpdate = _taskInfo.Updates.Dequeue();
-            return newUpdate;
+            try
+            {
+                await _taskInfo.Semaphore.WaitAsync(cancel);
+                UpdateInfo newUpdate;
+                lock (_taskInfo)
+                    newUpdate = _taskInfo.Updates.Dequeue();
+                return newUpdate;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
         }
     }
 }
