@@ -12,8 +12,8 @@ using TestBot.Contexts;
 namespace TestBot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240730195433_changes")]
-    partial class changes
+    [Migration("20240802070310_onemoretry")]
+    partial class onemoretry
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

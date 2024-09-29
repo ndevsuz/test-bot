@@ -5,32 +5,24 @@
 namespace TestBot.Migrations
 {
     /// <inheritdoc />
-    public partial class changes : Migration
+    public partial class onemoretry : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
+            migrationBuilder.AddColumn<string>(
                 name: "UserName",
                 table: "Answers",
                 type: "text",
-                nullable: true,
-                oldClrType: typeof(long),
-                oldType: "bigint");
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<long>(
+            migrationBuilder.DropColumn(
                 name: "UserName",
-                table: "Answers",
-                type: "bigint",
-                nullable: false,
-                defaultValue: 0L,
-                oldClrType: typeof(string),
-                oldType: "text",
-                oldNullable: true);
+                table: "Answers");
         }
     }
 }
