@@ -13,7 +13,7 @@ namespace TestBot.EasyBotFramework
 		private User Me { get; set; }
 		protected string BotName => Me.Username;
 
-			private int _lastUpdateId = -1;
+		private int _lastUpdateId = -1;
 		private readonly CancellationTokenSource _cancel = new();
 		private readonly Dictionary<long, TaskInfo> _tasks = new();
 
@@ -40,7 +40,7 @@ namespace TestBot.EasyBotFramework
 				{
 					try
 					{
-						var updates = await Telegram.GetUpdatesAsync();
+						var updates = await Telegram.GetUpdatesAsync(_lastUpdateId + 1, timeout: 2);
 						foreach (var update in updates)
 							HandleUpdate(update);
 						/*
