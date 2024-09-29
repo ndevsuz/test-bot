@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: testdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: muslim571
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -19,6 +17,3 @@ services:
     depends_on:
       - postgres
     command: ["./run-migrations.sh"]
-
-volumes:
-  pgdata:
