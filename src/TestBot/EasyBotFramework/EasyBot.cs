@@ -41,9 +41,11 @@ namespace TestBot.EasyBotFramework
 					var updates = await Telegram.GetUpdatesAsync();
 					foreach (var update in updates)
 						HandleUpdate(update);
+					/*
 					if (Console.KeyAvailable)
 						if (Console.ReadKey().Key == ConsoleKey.Escape)
 							break;
+				*/
 				}
 				catch (Exception e)
 				{
