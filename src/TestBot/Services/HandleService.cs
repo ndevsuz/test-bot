@@ -20,48 +20,55 @@ public class HandleService(
 {
     protected override async Task OnPrivateChat(Chat chat, User user, UpdateInfo updateInfo, Update update)
     {
-        if (update.Message != null)
+        try
         {
-            var updateMessage = update.Message.Text;
-            await IsSubscribed(updateInfo, chat, user);
-            switch (updateMessage)
+            if (update.Message != null)
             {
-                case "/panel" :
-                    await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
-                    break;
-                case "/start":
-                    _ = Task.Run(async () => await userService.AddUser(chat));
-                    await handler.Value.HandleUserTask(chat, user, updateInfo, update);
-                    break;	
-
-                default:
+                var updateMessage = update.Message.Text;
+                await IsSubscribed(updateInfo, chat, user);
+                switch (updateMessage)
                 {
-                    await handler.Value.HandleUserTask(chat, user, updateInfo, update);
-                    break;	
+                    case "/panel":
+                        await handler.Value.HandleAdminTask(chat, user, updateInfo, update);
+                        break;
+                    case "/start":
+                        _ = Task.Run(async () => await userService.AddUser(chat));
+                        await handler.Value.HandleUserTask(chat, user, updateInfo, update);
+                        break;
+
+                    default:
+                    {
+                        await handler.Value.HandleUserTask(chat, user, updateInfo, update);
+                        break;
+                    }
+                }
+            }
+
+            switch (updateInfo.CallbackData)
+            {
+                case null:
+                    return;
+                case "Subscribed":
+                {
+                    var result = await CheckMember.CheckMemberAsync(Telegram, chat, configuration);
+                    if (result)
+                    {
+                        ReplyCallback(updateInfo, "Muvaffaqiyatli\u2705");
+                        await handler.Value.HandleUserTask(chat, user, updateInfo, update);
+                    }
+
+                    break;
+                }
+                case "GetDetails":
+                {
+                    await callbackService.HandleCallbackQueryAsync(Telegram, update.CallbackQuery);
+                    return;
                 }
             }
         }
-
-        switch (updateInfo.CallbackData)
+        catch(Exception e)
         {
-            case null:
-                return;
-            case "Subscribed":
-            {
-                var result = await CheckMember.CheckMemberAsync(Telegram ,chat, configuration);
-                if (result)
-                {
-                    ReplyCallback(updateInfo, "Muvaffaqiyatli\u2705");
-                    await handler.Value.HandleUserTask(chat, user, updateInfo, update);
-                }
-
-                break;
-            }
-            case "GetDetails":  
-            {
-                await callbackService.HandleCallbackQueryAsync(Telegram, update.CallbackQuery);
-                return;
-            }
+         Console.WriteLine(e.Message);       
         }
     }
     public Task HandleRequest()
