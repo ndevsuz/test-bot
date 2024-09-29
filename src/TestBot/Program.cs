@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using TestBot;
 using TestBot.Contexts;
-using TestBot.EasyBotFramework;
 using TestBot.Handlers;
 using TestBot.Helpers;
 using TestBot.Interfaces;

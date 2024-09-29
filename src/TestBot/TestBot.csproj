@@ -12,12 +12,15 @@
         <PackageReference Include="ConnectingApps.SmartInject" Version="2.0.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
-        <PackageReference Include="Telegram.Bot" Version="21.3.0" />
+        <PackageReference Include="Telegram.Bot" Version="19.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -27,9 +30,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <Content Include="..\..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
 </Project>

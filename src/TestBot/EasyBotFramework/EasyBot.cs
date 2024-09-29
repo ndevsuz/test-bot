@@ -36,12 +36,20 @@ namespace TestBot.EasyBotFramework
 			Console.WriteLine($"Press Escape to stop the {BotName} bot");
 			while (true)
 			{
-				var updates = await Telegram.GetUpdatesAsync(_lastUpdateId + 1, timeout: 2);
-				foreach (var update in updates)
-					HandleUpdate(update);
-				if (Console.KeyAvailable)
-					if (Console.ReadKey().Key == ConsoleKey.Escape)
-						break;
+				try
+				{
+					var updates = await Telegram.GetUpdatesAsync();
+					foreach (var update in updates)
+						HandleUpdate(update);
+					if (Console.KeyAvailable)
+						if (Console.ReadKey().Key == ConsoleKey.Escape)
+							break;
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e.Message);
+					continue;
+				}
 			}
 			await _cancel.CancelAsync();
 		}
