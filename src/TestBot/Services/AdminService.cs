@@ -39,7 +39,7 @@ public class AdminService(ITestRepository testRepository)
 🕒 *Yaratilgan vaqt:* {EscapeMarkdown(newTest.CreatedAt.ToString())}
 🏆 *Sertefikatli:* {EscapeMarkdown(rewardStatus)}
 
-Test ishlashga tayyor\!
+Test ishlashga tayyor\! Javoblaringizni \@naima\_xusanova\_bot ga yuborishingiz mumkin✅
 
 Omad\!";
 
