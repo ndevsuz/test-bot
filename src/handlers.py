@@ -9,12 +9,16 @@ import services.answer_service as answers_service
 import keyboards
 from states import TestCreate, TestCheck
 from config import BOT_USERNAME
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = Router()
 
 @router.message(Command("start"))
 async def welcome(message: Message):
-    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+    logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     try:
         messages = load_messages()
         
@@ -25,45 +29,51 @@ async def welcome(message: Message):
     except Exception as e:
         messages = load_messages()
         await message.answer(messages["error"])
-        print(f"Error in start handler: {e}")
+        logger.error(f"Error in start handler: {e}")
 
 @router.message(F.text=="nigga")
 async def say_nigga(message: Message):
-    print(F"[OOOOOOOOOOO NIGGAAAAAAAAAAAAA] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+    logger.info(F"[OOOOOOOOOOO NIGGAAAAAAAAAAAAA] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     await message.answer("nigga")
     
 
 @router.callback_query(F.data=="check_subscription")
 async def check_subscription(callback: CallbackQuery):
-    if not await check_member(callback.from_user.id):
-        await callback.answer("❌")
-        return
-    await callback.answer("Muvaffaqiyatli✅")
-    await callback.message.delete()
-    messages = load_messages()
-    await callback.message.answer(messages["welcome"])
-    await callback.message.answer(messages["main_menu"], reply_markup=keyboards.main_menu)
-
+    try:
+        if not await check_member(callback.from_user.id):
+            await callback.answer("❌")
+            return
+        await callback.answer("Muvaffaqiyatli✅")
+        await callback.message.delete()
+        messages = load_messages()
+        await callback.message.answer(messages["welcome"])
+        await callback.message.answer(messages["main_menu"], reply_markup=keyboards.main_menu)
+    except Exception as e:
+        logger.error(f"Error in check_subscription: {e}")
     
 @router.message(F.text=="➕Test yaratish")
 async def try_create_test(message: Message, state: FSMContext):
-    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
-    if not await check(message):
-        return
-    message_text = (
-        "<b>❗️Yangi test yaratish!</b>\n\n"
-        "<b>✅Test nomini kiritib * (yulduzcha) belgisini qo'yasiz va barcha kalitni kiritasiz.</b>\n\n"
-        "<b>✍️Misol uchun:</b>\n"
-        "<blockquote>Matematika*abcdabcdabcd...  yoki\nMatematika*1a2b3c4d5a6b7c...</blockquote>"
-    )
-    
-    await message.reply(text=message_text,parse_mode="HTML", reply_markup=keyboards.cancel_keyboard)
-    await state.set_state(TestCreate.create)
-    
+    try: 
+        logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+        if not await check(message):
+            return
+        message_text = (
+            "<b>❗️Yangi test yaratish!</b>\n\n"
+            "<b>✅Test nomini kiritib * (yulduzcha) belgisini qo'yasiz va barcha kalitni kiritasiz.</b>\n\n"
+            "<b>✍️Misol uchun:</b>\n"
+            "<blockquote>Matematika*abcdabcdabcd...  yoki\nMatematika*1a2b3c4d5a6b7c...</blockquote>"
+        )
+
+        await message.reply(text=message_text,parse_mode="HTML", reply_markup=keyboards.cancel_keyboard)
+        await state.set_state(TestCreate.create)
+    except Exception as e:
+        messages = load_messages()
+        await message.answer(messages["error"])
+        logger.error(f"Error in try_create_test: {e}")
     
 @router.message(TestCreate.create)
 async def create_test(message: Message, state: FSMContext):
-    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+    logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     try:
         if not await check(message):
             return
@@ -131,87 +141,98 @@ async def create_test(message: Message, state: FSMContext):
 
 @router.message(F.text=="✅Javobni tekshirish")
 async def check_test_button_pressed(message: Message, state: FSMContext):
-    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
-    if not await check(message):
-        return
-    
-    message_text = (
-        "<b>✅Test kodini kiritib * (yulduzcha) belgisini qo'yasiz va barcha kalitni kiritasiz.</b>\n\n"
-        "<b>✍️Misol uchun: </b>"
-        "<blockquote>123*abcdabcd...</blockquote>\n"
-        "yoki\n"
-        "<blockquote>123*1a2b3c4d5a...</blockquote>\n"
-    )
-    await message.reply(text=message_text, reply_markup=keyboards.cancel_keyboard, parse_mode="HTML")
-    await state.set_state(TestCheck.check)
+    try:
+        logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+        if not await check(message):
+            return
+
+        message_text = (
+            "<b>✅Test kodini kiritib * (yulduzcha) belgisini qo'yasiz va barcha kalitni kiritasiz.</b>\n\n"
+            "<b>✍️Misol uchun: </b>"
+            "<blockquote>123*abcdabcd...</blockquote>\n"
+            "yoki\n"
+            "<blockquote>123*1a2b3c4d5a...</blockquote>\n"
+        )
+        await message.reply(text=message_text, reply_markup=keyboards.cancel_keyboard, parse_mode="HTML")
+        await state.set_state(TestCheck.check)
+    except Exception as e:
+        messages = load_messages()
+        await message.answer(messages["error"])
+        logger.error(f"Error in check_test_button_pressed: {e}")
     
 
 @router.message(TestCheck.check)
 async def process_test_answers(message: Message, state: FSMContext):
-    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
-    if not await check(message):
-        return
-    if message.text == "Bekor qilish❌":
-        await message.answer("❌ Bekor qilindi.", reply_markup=keyboards.main_menu)
-        await state.clear()
-        return
-
-    # 🔥 Validate input format
-    if "*" not in message.text:
-        await message.answer("⚠️ Iltimos, test kodini va javoblarni * bilan ajratib kiriting.", reply_markup=keyboards.cancel_keyboard)
-        return
-
-    parts = message.text.split("*")
-    if len(parts) != 2 or not parts[0].isdigit():
-        await message.answer("⚠️ Xato format. Misol: <code>123*1a2b3c</code>", parse_mode="HTML")
-        return
-
-    test_id, user_answers_text = int(parts[0]), parts[1]
-
-    # 🔥 Fetch test from DB
-    test = await tests.get_by_id(test_id)
-    if not test:
-        await message.answer("❌ Bunday test topilmadi.")
-        return
-
-    # 🔥 Convert user answers to dictionary format
-    user_answers_dict = extract_answers(user_answers_text)
+    logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     
-    if not test.test_amount == len(user_answers_dict):
-        await message.answer(f"{test.id} kodli testda savollar soni {test.test_amount} ta.\n❌Siz esa {len(user_answers_dict)} ta javob yozdingiz!")
-        return
+    try:
+        if not await check(message):
+            return
+        if message.text == "Bekor qilish❌":
+            await message.answer("❌ Bekor qilindi.", reply_markup=keyboards.main_menu)
+            await state.clear()
+            return
 
-    percentage, correct_count, incorrect_count, incorrect_answers = calculate_correct_answer_percentage(
-        user_answers_dict, test.answers_json
-    )
+        # 🔥 Validate input format
+        if "*" not in message.text:
+            await message.answer("⚠️ Iltimos, test kodini va javoblarni * bilan ajratib kiriting.", reply_markup=keyboards.cancel_keyboard)
+            return
 
-    answer_id = await answers_service.create(
-        test_id=test.id,
-        user_id=message.from_user.id,
-        full_name=message.from_user.full_name,
-        answers=user_answers_dict,
-        correct_count=correct_count,
-        incorrect_count=incorrect_count,
-        percentage=percentage
-    )
+        parts = message.text.split("*")
+        if len(parts) != 2 or not parts[0].isdigit():
+            await message.answer("⚠️ Xato format. Misol: <code>123*1a2b3c</code>", parse_mode="HTML")
+            return
 
-    result_message = (
-        f"👤 <b>Foydalanuvchi:\n</b> <a href='tg://user?id={message.from_user.id}'>{message.from_user.full_name}</a>\n\n\n"
-        f"<b>Test nomi:</b> {test.name}\n"
-        f"<b>Test kodi: {test.id}</b>\n"
-        f"<b>Jami savollar soni:</b> {test.test_amount}\n"
-        f"<b>To'g'ri javoblar soni:</b> {correct_count}\n"
-        f"<b>Foiz:</b> {int(percentage)}%\n\n\n"
-        "☝️ Noto`g`ri javoblaringiz test yakunlangandan so'ng yuboriladi.\n\n"
-        "-------------------\n"
-        f"🕐 Sana, vaqt: {DateTime.now()}"   
-    )
+        test_id, user_answers_text = int(parts[0]), parts[1]
 
-    await message.answer(result_message, parse_mode="HTML", reply_markup=keyboards.main_menu)
+        # 🔥 Fetch test from DB
+        test = await tests.get_by_id(test_id)
+        if not test:
+            await message.answer("❌ Bunday test topilmadi.")
+            return
 
-    await notify_creator(test, message, correct_count, percentage, incorrect_answers )
+        # 🔥 Convert user answers to dictionary format
+        user_answers_dict = extract_answers(user_answers_text)
 
-    await state.clear()
+        if not test.test_amount == len(user_answers_dict):
+            await message.answer(f"{test.id} kodli testda savollar soni {test.test_amount} ta.\n❌Siz esa {len(user_answers_dict)} ta javob yozdingiz!")
+            return
+
+        percentage, correct_count, incorrect_count, incorrect_answers = calculate_correct_answer_percentage(
+            user_answers_dict, test.answers_json
+        )
+
+        answer_id = await answers_service.create(
+            test_id=test.id,
+            user_id=message.from_user.id,
+            full_name=message.from_user.full_name,
+            answers=user_answers_dict,
+            correct_count=correct_count,
+            incorrect_count=incorrect_count,
+            percentage=percentage
+        )
+
+        result_message = (
+            f"👤 <b>Foydalanuvchi:\n</b> <a href='tg://user?id={message.from_user.id}'>{message.from_user.full_name}</a>\n\n\n"
+            f"<b>Test nomi:</b> {test.name}\n"
+            f"<b>Test kodi: {test.id}</b>\n"
+            f"<b>Jami savollar soni:</b> {test.test_amount}\n"
+            f"<b>To'g'ri javoblar soni:</b> {correct_count}\n"
+            f"<b>Foiz:</b> {int(percentage)}%\n\n\n"
+            "☝️ Noto`g`ri javoblaringiz test yakunlangandan so'ng yuboriladi.\n\n"
+            "-------------------\n"
+            f"🕐 Sana, vaqt: {DateTime.now()}"   
+        )
+
+        await message.answer(result_message, parse_mode="HTML", reply_markup=keyboards.main_menu)
+
+        await notify_creator(test, message, correct_count, percentage, incorrect_answers )
+
+        await state.clear()
+    except Exception as e:
+        messages = load_messages()
+        await message.answer(messages["error"])
+        logger.error(f"Error in process_test_answers: {e}")
 
 def register_handlers(dp):
     dp.include_router(router) 
@@ -237,13 +258,13 @@ async def notify_creator(test, message: Message, correct_count: int, percentage:
     try:
         await message.bot.send_message(creator_id, result_message, parse_mode="HTML")
     except Exception as e:
-        print(f"[!] Failed to notify creator: {e}")
+        logger.error(f"[!] Failed to notify creator: {e}")
 
 
 @router.message(F.text.startswith("/joriyholat_"))
 async def get_test_results(message: Message):
     try:
-        print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+        logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
         if not await check(message):
             return
         # 🔥 Extract test ID from the command
@@ -289,13 +310,13 @@ async def get_test_results(message: Message):
         await message.answer(result_text, parse_mode="HTML")
 
     except Exception as e:
-        print(f"[!] Error in get_test_results: {e}")
-        await message.answer("❌ Xatolik yuz berdi. Keyinroq qayta urinib ko‘ring.")
+        logger.error(f"[!] Error in get_test_results: {e}")
+        await message.answer("❌ Xatolik yuz berdi. Keyinroq qayta urinib ko‘ring.", reply_markup=keyboards.main_menu)
 
 @router.message(F.text.startswith("/yakunlash_"))
 async def finalize_test(message: Message):
     try:
-        print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+        logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
         if not await check(message):
             return
         # 🔥 Extract test ID from the command
@@ -370,15 +391,20 @@ async def finalize_test(message: Message):
         await tests.delete(test_id)
 
     except Exception as e:
-        print(f"[!] Error in finalize_test: {e}")
+        logger.error(f"[!] Error in finalize_test: {e}")
         await message.answer("❌ Xatolik yuz berdi. Keyinroq qayta urinib ko‘ring.")
 
 
 @router.message()
 async def default_handler(message: Message, state: FSMContext):
-    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
-    if not await check(message):
-        return
-    """Handles all unrecognized messages and sends the main menu."""
-    await message.answer("Asosiy menu.", reply_markup=keyboards.main_menu)
-    await state.clear()
+    try:
+        logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+        if not await check(message):
+            return
+        """Handles all unrecognized messages and sends the main menu."""
+        await message.answer("Asosiy menu.", reply_markup=keyboards.main_menu)
+        await state.clear()
+    except Exception as e:
+        messages = load_messages()
+        await message.answer(messages["error"])
+        logger.error(f"Error in default handler: {e}")

@@ -4,7 +4,7 @@ from aiogram.types import (
 
 subscribe_nigga = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Obuna bo'lish", url="https://t.me/+t6rTFC-i3OpjOThi"), InlineKeyboardButton(text="Tekshrish",callback_data="check_subscription")]
+        [InlineKeyboardButton(text="Obuna bo'lish", url="https://t.me/kelajakkabirqadam_1"), InlineKeyboardButton(text="Tekshrish",callback_data="check_subscription")]
     ]
 )
 
