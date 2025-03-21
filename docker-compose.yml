@@ -13,7 +13,6 @@ services:
       - "3363:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d  # 🔥 Mount SQL scripts for auto execution
 
   bot:
     build: .
