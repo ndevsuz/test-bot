@@ -1,15 +1,36 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
+  postgres:
+    image: postgres:15
+    container_name: pybot_postgres
+    restart: always
     environment:
-      ConnectionStrings__DefaultConnection: "Host=92.53.120.21; Port=5432; User Id=postgres; Password=muslim571; Database=testdb;"
+      POSTGRES_DB: pybot_db
+      POSTGRES_USER: pybot_user
+      POSTGRES_PASSWORD: pybot_pass
     ports:
-      - "5000:80"  
-    networks:
-      - app-network
+      - "3363:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-networks:
-  app-network:
-    driver: bridge
+  bot:
+    build: .
+    container_name: pybot
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 3363
+      DB_NAME: pybot_db
+      DB_USER: pybot_user
+      DB_PASSWORD: pybot_pass
+      BOT_TOKEN: your_telegram_bot_token_here
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["python", "src/main.py"]
+
+volumes:
+  postgres_data:

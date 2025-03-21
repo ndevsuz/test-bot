@@ -13,7 +13,7 @@ MESSAGES_CACHE = None
 def load_messages():
     global MESSAGES_CACHE
     if MESSAGES_CACHE is None:
-        with open("C:\\Projects\\ndevsuz\\test-bot\\pybot\\src\\messages.json", "r", encoding="utf-8") as file:
+        with open("messages.json", "r", encoding="utf-8") as file:
             MESSAGES_CACHE = json.load(file)
     return MESSAGES_CACHE
     

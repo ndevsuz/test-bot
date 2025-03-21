@@ -14,6 +14,7 @@ router = Router()
 
 @router.message(Command("start"))
 async def welcome(message: Message):
+    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     try:
         messages = load_messages()
         
@@ -28,6 +29,7 @@ async def welcome(message: Message):
 
 @router.message(F.text=="nigga")
 async def say_nigga(message: Message):
+    print(F"[OOOOOOOOOOO NIGGAAAAAAAAAAAAA] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     await message.answer("nigga")
     
 
@@ -45,6 +47,7 @@ async def check_subscription(callback: CallbackQuery):
     
 @router.message(F.text=="➕Test yaratish")
 async def try_create_test(message: Message, state: FSMContext):
+    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     if not await check(message):
         return
     message_text = (
@@ -60,6 +63,7 @@ async def try_create_test(message: Message, state: FSMContext):
     
 @router.message(TestCreate.create)
 async def create_test(message: Message, state: FSMContext):
+    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     try:
         if not await check(message):
             return
@@ -127,6 +131,7 @@ async def create_test(message: Message, state: FSMContext):
 
 @router.message(F.text=="✅Javobni tekshirish")
 async def check_test_button_pressed(message: Message, state: FSMContext):
+    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
     if not await check(message):
         return
     
@@ -143,6 +148,9 @@ async def check_test_button_pressed(message: Message, state: FSMContext):
 
 @router.message(TestCheck.check)
 async def process_test_answers(message: Message, state: FSMContext):
+    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+    if not await check(message):
+        return
     if message.text == "Bekor qilish❌":
         await message.answer("❌ Bekor qilindi.", reply_markup=keyboards.main_menu)
         await state.clear()
@@ -235,6 +243,9 @@ async def notify_creator(test, message: Message, correct_count: int, percentage:
 @router.message(F.text.startswith("/joriyholat_"))
 async def get_test_results(message: Message):
     try:
+        print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+        if not await check(message):
+            return
         # 🔥 Extract test ID from the command
         test_id = message.text.replace("/joriyholat_", "").strip()
         if not test_id.isdigit():
@@ -284,6 +295,9 @@ async def get_test_results(message: Message):
 @router.message(F.text.startswith("/yakunlash_"))
 async def finalize_test(message: Message):
     try:
+        print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+        if not await check(message):
+            return
         # 🔥 Extract test ID from the command
         test_id = message.text.replace("/yakunlash_", "").strip()
         if not test_id.isdigit():
@@ -362,6 +376,9 @@ async def finalize_test(message: Message):
 
 @router.message()
 async def default_handler(message: Message, state: FSMContext):
+    print(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
+    if not await check(message):
+        return
     """Handles all unrecognized messages and sends the main menu."""
     await message.answer("Asosiy menu.", reply_markup=keyboards.main_menu)
     await state.clear()

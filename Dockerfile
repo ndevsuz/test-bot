@@ -1,18 +1,14 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+﻿# Use official Python image
+FROM python:3.11
 
-COPY ["src/TestBot/TestBot.csproj", "src/TestBot/"]
-RUN dotnet restore "src/TestBot/TestBot.csproj"
-
-COPY . .
-
-WORKDIR "/src/src/TestBot"
-RUN dotnet build "TestBot.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "TestBot.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# Set the working directory
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "TestBot.dll"]
+
+# Copy project files
+COPY . /app
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Run the bot
+CMD ["python", "src/main.py"]
