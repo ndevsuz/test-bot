@@ -80,7 +80,6 @@ async def get_by_user_id(user_id: int):
     query = "SELECT * FROM sys_test where creator_user_id = $1"
     try:
         rows = await conn.fetch(query, user_id)
-        print(rows)
         return [
             Test(
                 id=row["id"],

@@ -284,7 +284,11 @@ async def get_test_results(message: Message):
             await message.answer("❌ Bunday test topilmadi.", reply_markup=keyboards.main_menu)
             return
         
-        if test.creator_user_id != message.from_user.id or message.from_user.id not in admins:
+        print("creator_user_id:", test.creator_user_id, type(test.creator_user_id))
+        print("from_user.id:", message.from_user.id, type(message.from_user.id))
+        print("is admin:", message.from_user.id in admins)
+
+        if test.creator_user_id != message.from_user.id and message.from_user.id not in admins:
             await message.answer("⛔️ Siz faqat o‘zingiz yaratgan testni ko'rishingiz mumkin!", reply_markup=keyboards.main_menu)
             return
 
@@ -326,7 +330,7 @@ async def finalize_test(message: Message):
             return
 
         # 🔥 Ensure only the test creator can delete it
-        if test.creator_user_id != message.from_user.id or message.from_user.id not in admins:
+        if test.creator_user_id != message.from_user.id and message.from_user.id not in admins:
             await message.answer("⛔️ Siz faqat o‘zingiz yaratgan testni yakunlashingiz mumkin!", reply_markup=keyboards.main_menu)
             return
 
