@@ -1,4 +1,4 @@
-CREATE TABLE sys_answers (
+CREATE TABLE sys_answer (
     id SERIAL PRIMARY KEY,
     test_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,

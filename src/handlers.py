@@ -393,6 +393,31 @@ async def finalize_test(message: Message):
     except Exception as e:
         logger.error(f"[!] Error in finalize_test: {e}")
         await message.answer("❌ Xatolik yuz berdi. Keyinroq qayta urinib ko‘ring.")
+        
+@router.message(F.text == "📝Testlarni ko'rish")
+async def get_tests(message: Message, state: FSMContext):
+    try:
+        if not await check(message):
+            return
+        
+        user_tests = await tests.get_by_user_id(message.from_user.id)
+
+        if not user_tests:
+            await message.answer("📭 Siz hali hech qanday test yaratmagansiz.")
+            return
+
+        # 🔥 Format test list
+        response = "🧾 <b>Siz yaratgan testlar ro'yxati:</b>\n\n\nTest nomi || Test kodi:\n<blockquote expandable>"
+        for test in user_tests:
+            response += f"{test.name} --> {test.id}\n"
+        response +="</blockquote>"
+
+        await message.answer(response, parse_mode="HTML")
+
+    except Exception as e:
+        messages = load_messages()
+        await message.answer(messages["error"])
+        logger.error(f"Error in get_tests: {e}")
 
 
 @router.message()

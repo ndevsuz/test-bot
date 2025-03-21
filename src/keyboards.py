@@ -20,7 +20,7 @@ main_menu = ReplyKeyboardMarkup(
     resize_keyboard=True,
     keyboard=[
         [KeyboardButton(text="➕Test yaratish"), KeyboardButton(text="✅Javobni tekshirish")],
-        [KeyboardButton(text="ℹ️Qo'llanma"), KeyboardButton(text="👀Testlarni ko'rish")],
+        [KeyboardButton(text="ℹ️Qo'llanma"), KeyboardButton(text="📝Testlarni ko'rish")],
     ]
 )
 

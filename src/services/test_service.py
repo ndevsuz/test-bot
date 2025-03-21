@@ -74,3 +74,27 @@ async def delete(test_id: int):
         print(f"[!] Error deleting test: {e}")
     finally:
         await conn.close()
+        
+async def get_by_user_id(user_id: int):
+    conn = await get_db_connection()
+    query = "SELECT * FROM sys_test where creator_user_id = $1"
+    try:
+        rows = await conn.fetch(query, user_id)
+        print(rows)
+        return [
+            Test(
+                id=row["id"],
+                name=row["name"],
+                test_amount=row["test_amount"],
+                answers_json=json.loads(row["answers_json"]),  # 🔥 Convert JSON string to dict
+                creator_user_id=row["creator_user_id"],
+                creator_user_full_name=row["creator_user_full_name"],
+                created_at=row["created_at"]
+            )
+            for row in rows
+        ]
+
+    except Exception as e:
+        pass
+    finally:
+        await conn.close()
