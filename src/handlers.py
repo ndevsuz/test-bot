@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 router = Router()
 
+admins = [1141084852, 6177562485]
+MAX_MSG_LENGTH = 4000
+
 @router.message(Command("start"))
 async def welcome(message: Message):
     logger.info(F"[LOG] user_id: {message.from_user.id}, user_name: {message.from_user.username} :  {message.text}")
@@ -281,7 +284,7 @@ async def get_test_results(message: Message):
             await message.answer("❌ Bunday test topilmadi.", reply_markup=keyboards.main_menu)
             return
         
-        if test.creator_user_id != message.from_user.id:
+        if test.creator_user_id != message.from_user.id or message.from_user.id not in admins:
             await message.answer("⛔️ Siz faqat o‘zingiz yaratgan testni ko'rishingiz mumkin!", reply_markup=keyboards.main_menu)
             return
 
@@ -295,19 +298,8 @@ async def get_test_results(message: Message):
         sorted_answers = sorted(answers, key=lambda x: x.correct_count, reverse=True)
 
         # 🔥 Prepare the results message
-        result_text = (
-            "📊 <b>Natijalarning joriy holati.</b>\n\n\n"
-            f"<b>Test muallifi:</b> \n<a href='tg://user?id={test.creator_user_id}'>{test.creator_user_full_name}</a>\n\n"
-            f"<b>Test kodi:</b> {test.id}\n"
-            f"<b>Savollar soni:</b> {test.test_amount} ta\n\n"
-            "✅ <b>Natijalar:</b>\n\n"
-        )
 
-        for index, answer in enumerate(sorted_answers, start=1):
-            medal = " 🥇" if index == 1 else ""  # Only add 🥇 for first place
-            result_text += f"{index}. <a href='tg://user?id={answer.user_id}'>{answer.full_name}</a> - {answer.correct_count} ta{medal}\n"
-
-        await message.answer(result_text, parse_mode="HTML")
+        await send_test_results_with_chunking(message, test, sorted_answers)
 
     except Exception as e:
         logger.error(f"[!] Error in get_test_results: {e}")
@@ -334,7 +326,7 @@ async def finalize_test(message: Message):
             return
 
         # 🔥 Ensure only the test creator can delete it
-        if test.creator_user_id != message.from_user.id:
+        if test.creator_user_id != message.from_user.id or message.from_user.id not in admins:
             await message.answer("⛔️ Siz faqat o‘zingiz yaratgan testni yakunlashingiz mumkin!", reply_markup=keyboards.main_menu)
             return
 
@@ -351,24 +343,11 @@ async def finalize_test(message: Message):
         # 🔥 Sort users by correct answers (descending)
         sorted_answers = sorted(answers, key=lambda x: x.correct_count, reverse=True)
 
-        # 🔥 Prepare the final results message in your format
-        result_text = (
-            "⛔️ <b>Test yakunlandi.</b>\n\n\n"
-            f"<b>Test muallifi:</b>\n<a href='tg://user?id={test.creator_user_id}'>{test.creator_user_full_name}</a>\n\n"
-            f"<b>Test kodi:</b> {test.id}\n"
-            f"<b>Savollar soni:</b> {test.test_amount} ta\n\n"
-            "✅ <b>Natijalar:</b>\n\n"
-        )
-
-        for index, answer in enumerate(sorted_answers, start=1):
-            medal = " 🥇" if index == 1 else ""
-            result_text += f"{index}. {answer.full_name} - {answer.correct_count} ta{medal}\n"
-
         # 🔥 Format correct answers in "1.a  2.b  ..." style
         correct_answers_text = "   ".join([f"{k}.{v}" for k, v in test.answers_json.items()])
         result_text += f"\n<b>To‘g‘ri javoblar:</b>\n{correct_answers_text}"
 
-        await message.answer(result_text, parse_mode="HTML")
+        await send_test_results_with_chunking(message, test, sorted_answers, is_final=True)
 
         # 🔥 Notify each participant with their incorrect answers
         for answer in sorted_answers:
@@ -433,3 +412,34 @@ async def default_handler(message: Message, state: FSMContext):
         messages = load_messages()
         await message.answer(messages["error"])
         logger.error(f"Error in default handler: {e}")
+        
+
+async def send_test_results_with_chunking(message, test, sorted_answers, is_final=False):
+    result_text = (
+        f"{'⛔️ <b>Test yakunlandi.</b>' if is_final else '📊 <b>Natijalarning joriy holati.</b>'}\n\n\n"
+        f"<b>Test muallifi:</b>\n<a href='tg://user?id={test.creator_user_id}'>{test.creator_user_full_name}</a>\n\n"
+        f"<b>Test kodi:</b> {test.id}\n"
+        f"<b>Savollar soni:</b> {test.test_amount} ta\n\n"
+        "✅ <b>Natijalar:</b>\n\n"
+    )
+
+    for index, answer in enumerate(sorted_answers, start=1):
+        medal = " 🥇" if index == 1 else ""
+        line = f"{index}. <a href='tg://user?id={answer.user_id}'>{answer.full_name}</a> - {answer.correct_count} ta{medal}\n"
+
+        # 🔪 Split before it gets too long
+        if len(result_text) + len(line) > MAX_MSG_LENGTH:
+            await message.answer(result_text, parse_mode="HTML")
+            result_text = ""  # Start a new chunk
+
+        result_text += line
+
+    # Final flush
+    if is_final:
+        correct_answers_text = "   ".join([f"{k}.{v}" for k, v in test.answers_json.items()])
+        if len(result_text) + len(correct_answers_text) + 50 > MAX_MSG_LENGTH:
+            await message.answer(result_text, parse_mode="HTML")
+            result_text = ""
+        result_text += f"\n<b>To‘g‘ri javoblar:</b>\n{correct_answers_text}"
+
+    await message.answer(result_text, parse_mode="HTML")
