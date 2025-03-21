@@ -5,27 +5,21 @@ networks:
     external: true
 
 services:
-  # postgres:
-  #   image: postgres:15
-  #   container_name: pybot_postgres
-  #   restart: always
-  #   environment:
-  #     POSTGRES_DB: pybot_db
-  #     POSTGRES_USER: pybot_user
-  #     POSTGRES_PASSWORD: pybot_pass
-  #   ports:
-  #     - "3363:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-
   bot:
     build: .
     container_name: pybot
     restart: always
+    networks:
+      - shared-network  # 👈 Add this
+    environment:
+      DB_HOST: testportal_devops-postgres-1  # 👈 This is the running container name
+      DB_PORT: 5432
+      DB_NAME: pybot_db
+      DB_USER: pybot_user
+      DB_PASSWORD: pybot_pass
+      BOT_TOKEN: your_bot_token
+      BOT_USERNAME: your_bot_username
     volumes:
       - .:/app
     working_dir: /app
     command: ["python", "src/main.py"]
-
-volumes:
-  postgres_data:
