@@ -1,32 +1,27 @@
 version: '3.8'
 
+networks:
+  shared-network:
+    external: true
+
 services:
-  postgres:
-    image: postgres:15
-    container_name: pybot_postgres
-    restart: always
-    environment:
-      POSTGRES_DB: pybot_db
-      POSTGRES_USER: pybot_user
-      POSTGRES_PASSWORD: pybot_pass
-    ports:
-      - "3363:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres:15
+  #   container_name: pybot_postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_DB: pybot_db
+  #     POSTGRES_USER: pybot_user
+  #     POSTGRES_PASSWORD: pybot_pass
+  #   ports:
+  #     - "3363:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
   bot:
     build: .
     container_name: pybot
     restart: always
-    depends_on:
-      - postgres
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: pybot_db
-      DB_USER: pybot_user
-      DB_PASSWORD: pybot_pass
-      BOT_TOKEN: your_telegram_bot_token_here
     volumes:
       - .:/app
     working_dir: /app
